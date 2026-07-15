@@ -3,6 +3,8 @@ import { useReportsStore } from "../store/useReportsStore";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { LoadingBlock } from "../../../shared/components/LoadingBlock";
 import { EmptyState } from "../../../shared/components/EmptyState";
+import { CategorySelect } from "../../products/components/CategorySelect";
+import { useDebouncedValue } from "../../../shared/utils/useDebouncedValue";
 import { formatCurrency, formatNumber } from "../../../shared/utils/inventory";
 import { showError } from "../../../shared/utils/toast";
 
@@ -15,14 +17,24 @@ export const AlertsPage = () => {
   const fetchAlerts = useReportsStore((s) => s.fetchAlerts);
 
   const [localThreshold, setLocalThreshold] = useState(5);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
+  const debouncedThreshold = useDebouncedValue(localThreshold, 400);
+  const debouncedCategory = useDebouncedValue(categoryFilter, 400);
 
   useEffect(() => {
-    fetchAlerts(5);
-  }, [fetchAlerts]);
+    fetchAlerts(debouncedThreshold, debouncedCategory).finally(() =>
+      setHasLoadedOnce(true)
+    );
+  }, [debouncedThreshold, debouncedCategory, fetchAlerts]);
 
   useEffect(() => {
     if (error) showError(error);
   }, [error]);
+
+  const isRefreshing = loading && hasLoadedOnce;
+  const showFullLoading = loading && !hasLoadedOnce;
 
   return (
     <div>
@@ -33,7 +45,7 @@ export const AlertsPage = () => {
           <button
             type="button"
             className="panel-btn"
-            onClick={() => fetchAlerts(localThreshold)}
+            onClick={() => fetchAlerts(localThreshold, categoryFilter)}
           >
             Actualizar
           </button>
@@ -54,23 +66,33 @@ export const AlertsPage = () => {
             onChange={(e) => setLocalThreshold(Number(e.target.value) || 0)}
           />
         </div>
-        <button
-          type="button"
-          className="panel-btn"
-          onClick={() => fetchAlerts(localThreshold)}
-        >
-          Aplicar umbral
-        </button>
+        <div>
+          <label className="panel-label" htmlFor="category-filter">
+            Categoría
+          </label>
+          <CategorySelect
+            id="category-filter"
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            required={false}
+            placeholder="Todas las categorías"
+          />
+        </div>
         <p className="pb-2 text-sm text-honeycomb">
           Umbral activo: {threshold}
+          {isRefreshing && (
+            <span className="ml-2 text-xs font-semibold uppercase tracking-wider text-honeycomb">
+              Actualizando...
+            </span>
+          )}
         </p>
       </div>
 
-      {loading ? (
+      {showFullLoading ? (
         <LoadingBlock label="Revisando el panal..." />
       ) : (
         <div className="grid gap-5 xl:grid-cols-2">
-          <section className="panel-card">
+          <section className="panel-card panel-card-hover">
             <h2 className="mb-3 font-display text-xl font-bold text-cacao-ink">
               Stock bajo ({lowStock.length})
             </h2>
@@ -85,6 +107,7 @@ export const AlertsPage = () => {
                   <thead>
                     <tr>
                       <th>Producto</th>
+                      <th>Categoría</th>
                       <th>Stock</th>
                       <th>Faltan</th>
                       <th>Estado</th>
@@ -93,11 +116,20 @@ export const AlertsPage = () => {
                   <tbody>
                     {lowStock.map((item) => (
                       <tr key={item._id}>
-                        <td className="font-semibold">{item.name}</td>
-                        <td>{formatNumber(item.stock)}</td>
-                        <td>{formatNumber(item.missingUnits)}</td>
-                        <td>
-                          <span className="rounded-full bg-honey-nectar/30 px-2 py-1 text-xs font-bold uppercase">
+                        <td data-label="Producto" className="font-semibold">
+                          {item.name}
+                        </td>
+                        <td data-label="Categoría">{item.category}</td>
+                        <td data-label="Stock">{formatNumber(item.stock)}</td>
+                        <td data-label="Faltan">{formatNumber(item.missingUnits)}</td>
+                        <td data-label="Estado">
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-bold uppercase ${
+                              item.status === "SIN_STOCK"
+                                ? "bg-danger/20 text-danger"
+                                : "bg-honey-nectar/30 text-cacao-ink"
+                            }`}
+                          >
                             {item.status}
                           </span>
                         </td>
@@ -109,7 +141,7 @@ export const AlertsPage = () => {
             )}
           </section>
 
-          <section className="panel-card">
+          <section className="panel-card panel-card-hover">
             <h2 className="mb-3 font-display text-xl font-bold text-cacao-ink">
               Agotados ({outOfStock.length})
             </h2>
@@ -131,9 +163,11 @@ export const AlertsPage = () => {
                   <tbody>
                     {outOfStock.map((item) => (
                       <tr key={item._id}>
-                        <td className="font-semibold">{item.name}</td>
-                        <td>{item.category}</td>
-                        <td>{formatCurrency(item.price)}</td>
+                        <td data-label="Producto" className="font-semibold">
+                          {item.name}
+                        </td>
+                        <td data-label="Categoría">{item.category}</td>
+                        <td data-label="Precio">{formatCurrency(item.price)}</td>
                       </tr>
                     ))}
                   </tbody>

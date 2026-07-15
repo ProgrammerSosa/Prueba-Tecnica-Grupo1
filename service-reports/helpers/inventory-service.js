@@ -29,12 +29,16 @@ const normalizeProducts = (payload) => {
     return null;
 };
 
-export const fetchProducts = async (token) => {
+export const fetchProducts = async (token, { category } = {}) => {
     let response;
 
+    const path = category ? '/products/search' : '/products';
+    const params = category ? { category } : undefined;
+
     try {
-        response = await getClient().get('/products', {
+        response = await getClient().get(path, {
             headers: { Authorization: `Bearer ${token}` },
+            params,
         });
     } catch (error) {
         if (error.response) {
@@ -66,7 +70,11 @@ export const fetchProducts = async (token) => {
         );
     }
 
-    return products;
+    // service-inventory expone la cantidad como "existences", no "stock".
+    return products.map((product) => ({
+        ...product,
+        stock: Number(product.existences ?? product.stock ?? 0),
+    }));
 };
 
 export const getDefaultThreshold = () => {

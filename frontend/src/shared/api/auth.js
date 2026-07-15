@@ -30,6 +30,12 @@ export const getProfile = async () => {
     return await axiosAuth.get("/auth/profile");
 }
 
+export const updateProfilePicture = async (formData) => {
+    return await axiosAuth.patch("/auth/profile", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+}
+
 export const refreshSession = async () => {
     return await axiosAuth.post("/auth/refresh");
 }

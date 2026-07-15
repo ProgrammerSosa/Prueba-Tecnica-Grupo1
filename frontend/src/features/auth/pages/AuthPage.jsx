@@ -33,8 +33,8 @@ export const AuthPage = () => {
           exit={prefersReducedMotion ? undefined : { opacity: 0, x: -16 }}
           transition={{ duration: 0.25 }}
         >
-          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-pollen">
-            Acceso InvenTech
+          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-honeycomb">
+            Acceso BeeHive
           </p>
           <h2 className="mb-5 font-display text-2xl font-bold text-cacao-ink md:text-3xl">
             {viewCopy[currentView]}

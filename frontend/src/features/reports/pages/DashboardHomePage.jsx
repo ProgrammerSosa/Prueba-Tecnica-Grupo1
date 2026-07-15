@@ -5,12 +5,14 @@ import { PageHeader } from "../../../shared/components/PageHeader";
 import { StatCard } from "../../../shared/components/StatCard";
 import { LoadingBlock } from "../../../shared/components/LoadingBlock";
 import { EmptyState } from "../../../shared/components/EmptyState";
+import { CategoryBarChart } from "../components/CategoryBarChart";
 import { formatCurrency, formatNumber } from "../../../shared/utils/inventory";
 import { showError } from "../../../shared/utils/toast";
 
 export const DashboardHomePage = () => {
   const summary = useReportsStore((s) => s.summary);
   const topProducts = useReportsStore((s) => s.topProducts);
+  const categories = useReportsStore((s) => s.categories);
   const loading = useReportsStore((s) => s.loading);
   const error = useReportsStore((s) => s.error);
   const fetchSummary = useReportsStore((s) => s.fetchSummary);
@@ -94,7 +96,12 @@ export const DashboardHomePage = () => {
             </Link>
           </div>
 
-          <div className="panel-card">
+          <div className="panel-card panel-card-hover mb-6">
+            <h2 className="mb-3 font-display text-xl font-bold">Stock por categoría</h2>
+            <CategoryBarChart data={categories} />
+          </div>
+
+          <div className="panel-card panel-card-hover">
             <h2 className="mb-3 font-display text-xl font-bold">Más movidos del enjambre</h2>
             {topProducts.length === 0 ? (
               <p className="text-sm text-honeycomb">
@@ -114,10 +121,10 @@ export const DashboardHomePage = () => {
                   <tbody>
                     {topProducts.map((item) => (
                       <tr key={String(item._id)}>
-                        <td className="font-semibold">{item.name}</td>
-                        <td>{item.category}</td>
-                        <td>{formatNumber(item.totalSold)}</td>
-                        <td>{formatNumber(item.currentStock)}</td>
+                        <td data-label="Producto" className="font-semibold">{item.name}</td>
+                        <td data-label="Categoría">{item.category}</td>
+                        <td data-label="Vendidos">{formatNumber(item.totalSold)}</td>
+                        <td data-label="Stock actual">{formatNumber(item.currentStock)}</td>
                       </tr>
                     ))}
                   </tbody>

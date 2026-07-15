@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { useProductStore } from "../store/useProductStore";
 
-export const CategorySelect = ({ value, onChange, id = "category", required = true }) => {
+export const CategorySelect = ({
+  value,
+  onChange,
+  id = "category",
+  required = true,
+  placeholder = "Selecciona categoría",
+}) => {
   const categories = useProductStore((state) => state.categories);
   const fetchCategories = useProductStore((state) => state.fetchCategories);
 
@@ -19,7 +25,7 @@ export const CategorySelect = ({ value, onChange, id = "category", required = tr
       onChange={(e) => onChange(e.target.value)}
       required={required}
     >
-      <option value="">Selecciona categoría</option>
+      <option value="">{placeholder}</option>
       {categories.map((cat) => (
         <option key={cat} value={cat}>
           {cat}

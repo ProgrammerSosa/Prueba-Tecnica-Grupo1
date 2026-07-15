@@ -6,7 +6,6 @@ import {
   getLowStockAlert,
   getOutOfStockAlert,
 } from "../../../shared/api/reports";
-import { useAuthStore } from "../../auth/store/useAuthStore";
 
 export const useReportsStore = create((set) => ({
   summary: null,
@@ -15,15 +14,13 @@ export const useReportsStore = create((set) => ({
   lowStock: [],
   outOfStock: [],
   threshold: 5,
+  categoryFilter: "",
   loading: false,
   error: null,
 
   fetchSummary: async () => {
     try {
       set({ loading: true, error: null });
-      // #region agent log
-      fetch('http://127.0.0.1:7579/ingest/fe688a18-e41e-438d-adc4-2b2c5e8f12dc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6d89a4'},body:JSON.stringify({sessionId:'6d89a4',runId:'pre-fix',hypothesisId:'A',location:'useReportsStore.js:fetchSummary',message:'fetchSummary start',data:{hasToken:Boolean(useAuthStore.getState().token)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       const { data } = await getSummaryReport();
       const payload = data.data || {};
       set({
@@ -32,16 +29,10 @@ export const useReportsStore = create((set) => ({
         categories: payload.categories || [],
         loading: false,
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7579/ingest/fe688a18-e41e-438d-adc4-2b2c5e8f12dc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6d89a4'},body:JSON.stringify({sessionId:'6d89a4',runId:'pre-fix',hypothesisId:'A',location:'useReportsStore.js:fetchSummary:success',message:'fetchSummary ok',data:{hasTotals:Boolean(payload.totals)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       return { success: true };
     } catch (err) {
       const message =
         err.response?.data?.message || "No se pudo cargar el resumen";
-      // #region agent log
-      fetch('http://127.0.0.1:7579/ingest/fe688a18-e41e-438d-adc4-2b2c5e8f12dc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6d89a4'},body:JSON.stringify({sessionId:'6d89a4',runId:'pre-fix',hypothesisId:'B_D_E',location:'useReportsStore.js:fetchSummary:catch',message:'fetchSummary failed',data:{status:err.response?.status||null,errorCode:err.response?.data?.error||null,errorMessage:message},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       set({ error: message, loading: false });
       return { success: false, error: message };
     }
@@ -71,18 +62,19 @@ export const useReportsStore = create((set) => ({
     }
   },
 
-  fetchAlerts: async (threshold = 5) => {
+  fetchAlerts: async (threshold = 5, category = "") => {
     try {
       set({ loading: true, error: null });
       const [lowRes, outRes] = await Promise.all([
-        getLowStockAlert(threshold),
-        getOutOfStockAlert(),
+        getLowStockAlert(threshold, category),
+        getOutOfStockAlert(category),
       ]);
 
       set({
         lowStock: lowRes.data?.data?.products || [],
         outOfStock: outRes.data?.data?.products || [],
         threshold: lowRes.data?.data?.threshold ?? threshold,
+        categoryFilter: category,
         loading: false,
       });
       return { success: true };

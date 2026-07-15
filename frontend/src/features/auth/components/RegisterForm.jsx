@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useAuthStore } from "../store/useAuthStore";
 import { showSuccess } from "../../../shared/utils/toast";
 import { AuthAlert } from "./AuthAlert";
+import { AuthSubmitButton } from "./AuthSubmitButton";
 import { BeeIcon } from "./icons/BeeIcon";
 
 const stepTitles = {
@@ -110,7 +111,7 @@ export const RegisterForm = ({ onSwitchView }) => {
               <>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="auth-label text-honeycomb">Nombres</label>
+                    <label className="auth-label">Nombres</label>
                     <input
                       type="text"
                       className="auth-input"
@@ -122,7 +123,7 @@ export const RegisterForm = ({ onSwitchView }) => {
                     />
                   </div>
                   <div>
-                    <label className="auth-label text-honeycomb">Apellidos</label>
+                    <label className="auth-label">Apellidos</label>
                     <input
                       type="text"
                       className="auth-input"
@@ -136,7 +137,7 @@ export const RegisterForm = ({ onSwitchView }) => {
                 </div>
 
                 <div>
-                  <label className="auth-label text-honeycomb">Usuario</label>
+                  <label className="auth-label">Usuario</label>
                   <input
                     type="text"
                     className="auth-input"
@@ -148,7 +149,7 @@ export const RegisterForm = ({ onSwitchView }) => {
                 </div>
 
                 <div>
-                  <label className="auth-label text-honeycomb">Teléfono</label>
+                  <label className="auth-label">Teléfono</label>
                   <input
                     type="tel"
                     className="auth-input"
@@ -160,7 +161,7 @@ export const RegisterForm = ({ onSwitchView }) => {
                 </div>
 
                 <div>
-                  <label className="auth-label text-honeycomb">Correo electrónico</label>
+                  <label className="auth-label">Correo electrónico</label>
                   <input
                     type="email"
                     className="auth-input"
@@ -176,7 +177,7 @@ export const RegisterForm = ({ onSwitchView }) => {
                 </div>
 
                 <div>
-                  <label className="auth-label text-honeycomb">Contraseña</label>
+                  <label className="auth-label">Contraseña</label>
                   <input
                     type="password"
                     className="auth-input"
@@ -189,7 +190,7 @@ export const RegisterForm = ({ onSwitchView }) => {
                 </div>
 
                 <div>
-                  <label className="auth-label text-honeycomb">
+                  <label className="auth-label">
                     Foto de perfil (opcional)
                   </label>
                   <input
@@ -223,7 +224,7 @@ export const RegisterForm = ({ onSwitchView }) => {
                   Datos adicionales opcionales. Puedes completarlos después.
                 </p>
                 <div>
-                  <label className="auth-label text-honeycomb">Dirección</label>
+                  <label className="auth-label">Dirección</label>
                   <input
                     type="text"
                     className="auth-input"
@@ -239,13 +240,9 @@ export const RegisterForm = ({ onSwitchView }) => {
                   >
                     Atrás
                   </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="auth-btn-primary flex-1"
-                  >
-                    {loading ? "Registrando..." : "Completar registro"}
-                  </button>
+                  <AuthSubmitButton loading={loading} loadingLabel="Registrando..." className="flex-1">
+                    Completar registro
+                  </AuthSubmitButton>
                 </div>
               </>
             )}

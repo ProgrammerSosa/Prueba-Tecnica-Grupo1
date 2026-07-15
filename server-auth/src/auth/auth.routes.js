@@ -113,6 +113,23 @@ router.post('/login', authRateLimit, validateLogin, authController.login);
 
 /**
  * @swagger
+ * /api/v1/auth/refresh:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Renueva el JWT del usuario autenticado
+ *     description: Emite un nuevo token con expiración renovada, para sliding sessions
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sesión renovada exitosamente
+ *       401:
+ *         description: Token inválido o expirado
+ */
+router.post('/refresh', validateJWT, requestLimit, authController.refreshSession);
+
+/**
+ * @swagger
  * /api/v1/auth/verify-email:
  *   post:
  *     tags: [Authentication]
@@ -138,7 +155,7 @@ router.post('/login', authRateLimit, validateLogin, authController.login);
  */
 router.post(
   '/verify-email',
-  requestLimit, // Match .NET ApiPolicy (20 tokens per minute)
+  requestLimit, // 60 req/min
   validateVerifyEmail,
   authController.verifyEmail
 );
@@ -170,7 +187,7 @@ router.post(
  */
 router.post(
   '/resend-verification',
-  authRateLimit, // Match .NET AuthPolicy (5 req/min)
+  authRateLimit, // 20 req/min
   validateResendVerification,
   authController.resendVerification
 );
@@ -200,7 +217,7 @@ router.post(
  */
 router.post(
   '/forgot-password',
-  authRateLimit, // Match .NET AuthPolicy (5 req/min)
+  authRateLimit, // 20 req/min
   validateForgotPassword,
   authController.forgotPassword
 );
@@ -259,6 +276,39 @@ router.post(
  *         description: Email no verificado
  */
 router.get('/profile', validateJWT, authController.getProfile);
+
+/**
+ * @swagger
+ * /api/v1/auth/profile:
+ *   patch:
+ *     tags: [Profile]
+ *     summary: Actualiza la foto de perfil del usuario autenticado
+ *     consumes:
+ *       - multipart/form-data
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: profilePicture
+ *         in: formData
+ *         required: true
+ *         type: file
+ *         description: Nueva imagen de perfil
+ *     responses:
+ *       200:
+ *         description: Foto de perfil actualizada exitosamente
+ *       400:
+ *         description: No se envió ninguna imagen
+ *       401:
+ *         description: Token inválido
+ */
+router.patch(
+  '/profile',
+  validateJWT,
+  requestLimit,
+  upload.single('profilePicture'),
+  handleUploadError,
+  authController.updateProfile
+);
 
 /**
  * @swagger
