@@ -11,7 +11,7 @@ export const BeeIcon = ({ className = "h-16 w-16", animate = true }) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="Abeja InvenTech"
+      aria-label="Abeja BeeHive"
     >
       <motion.g
         style={{ transformOrigin: "22px 40px" }}

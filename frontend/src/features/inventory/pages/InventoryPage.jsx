@@ -122,10 +122,10 @@ export const InventoryPage = () => {
                 const stock = getProductStock(product);
                 return (
                   <tr key={product._id}>
-                    <td className="font-semibold">{product.name}</td>
-                    <td>{product.category}</td>
-                    <td>{formatCurrency(product.price)}</td>
-                    <td>
+                    <td data-label="Producto" className="font-semibold">{product.name}</td>
+                    <td data-label="Categoría">{product.category}</td>
+                    <td data-label="Precio">{formatCurrency(product.price)}</td>
+                    <td data-label="Existencias">
                       <span
                         className={
                           stock === 0
@@ -138,7 +138,7 @@ export const InventoryPage = () => {
                         {formatNumber(stock)}
                       </span>
                     </td>
-                    <td>{product.isActive ? "Activo" : "Inactivo"}</td>
+                    <td data-label="Estado">{product.isActive ? "Activo" : "Inactivo"}</td>
                   </tr>
                 );
               })}

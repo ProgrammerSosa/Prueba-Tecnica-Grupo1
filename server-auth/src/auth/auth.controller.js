@@ -1,12 +1,16 @@
 import {
   registerUserHelper,
   loginUserHelper,
+  refreshSessionHelper,
   verifyEmailHelper,
   resendVerificationEmailHelper,
   forgotPasswordHelper,
   resetPasswordHelper,
 } from '../../helpers/auth-operations.js';
-import { getUserProfileHelper } from '../../helpers/profile-operations.js';
+import {
+  getUserProfileHelper,
+  updateUserProfilePictureHelper,
+} from '../../helpers/profile-operations.js';
 import { asyncHandler } from '../../middlewares/server-genericError-handler.js';
 
 export const register = asyncHandler(async (req, res) => {
@@ -61,6 +65,19 @@ export const login = asyncHandler(async (req, res) => {
       success: false,
       message: error.message || 'Error en el login',
       error: error.message,
+    });
+  }
+});
+
+export const refreshSession = asyncHandler(async (req, res) => {
+  try {
+    const result = await refreshSessionHelper(req.userId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error in refreshSession controller:', error);
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'No se pudo renovar la sesión',
     });
   }
 });
@@ -181,6 +198,33 @@ export const getProfile = asyncHandler(async (req, res) => {
     message: 'Perfil obtenido exitosamente',
     data: user,
   });
+});
+
+export const updateProfile = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: 'La imagen de perfil es requerida',
+    });
+  }
+
+  try {
+    const user = await updateUserProfilePictureHelper(userId, req.file.path);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Foto de perfil actualizada exitosamente',
+      data: user,
+    });
+  } catch (error) {
+    console.error('Error in updateProfile controller:', error);
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Error al actualizar la foto de perfil',
+    });
+  }
 });
 
 export const getProfileById = asyncHandler(async (req, res) => {

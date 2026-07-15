@@ -51,18 +51,30 @@ export const validateJWT = async (req, res, next) => {
   } catch (error) {
     console.error('Error validating JWT:', error);
 
-    let message = 'Error al verificar el token';
-
     if (error.name === 'TokenExpiredError') {
-      message = 'Token expirado';
-    } else if (error.name === 'JsonWebTokenError') {
-      message = 'Token inválido';
+      return res.status(401).json({
+        success: false,
+        message: 'Token expirado',
+        error: 'TOKEN_EXPIRED',
+      });
     }
 
-    return res.status(401).json({
+    if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token inválido',
+        error: 'INVALID_TOKEN',
+      });
+    }
+
+    // Cualquier otro error (timeout/conexión a la base de datos, etc.) es un
+    // fallo de infraestructura, no un token inválido: no debe responder 401
+    // ni disparar un logout en el frontend.
+    return res.status(503).json({
       success: false,
-      message,
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      message: 'Servicio no disponible temporalmente, intenta de nuevo',
+      error: 'AUTH_SERVICE_UNAVAILABLE',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

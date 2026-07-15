@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { useAuthStore } from "../store/useAuthStore";
 import { showSuccess } from "../../../shared/utils/toast";
 import { AuthAlert } from "./AuthAlert";
+import { AuthSubmitButton } from "./AuthSubmitButton";
 
 export const ForgotPassword = ({ onSwitchView }) => {
   const error = useAuthStore((state) => state.error);
@@ -37,7 +38,7 @@ export const ForgotPassword = ({ onSwitchView }) => {
         <AuthAlert>{error}</AuthAlert>
 
         <div>
-          <label className="auth-label text-honeycomb" htmlFor="forgot-email">
+          <label className="auth-label" htmlFor="forgot-email">
             Correo electrónico
           </label>
           <input
@@ -55,9 +56,9 @@ export const ForgotPassword = ({ onSwitchView }) => {
           )}
         </div>
 
-        <button type="submit" disabled={loading} className="auth-btn-primary">
-          {loading ? "Enviando..." : "Recuperar acceso"}
-        </button>
+        <AuthSubmitButton loading={loading} loadingLabel="Enviando...">
+          Recuperar acceso
+        </AuthSubmitButton>
       </form>
 
       <p className="mt-6 text-center text-sm text-honeycomb">
