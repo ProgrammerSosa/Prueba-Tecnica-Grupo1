@@ -7,6 +7,7 @@ import { corsOptions } from './cors-configuration.js';
 import { helmetConfiguration } from './helmet-configuration.js';
 import { requestLimit } from '../middlewares/request-limit.js';
 import { errorHandler } from '../middlewares/handle-errors.js';
+import productRoutes from '../src/products/product.routes.js';
 import entryRoutes from '../src/entries/entry.routes.js';
 import outputRoutes from '../src/outputs/output.routes.js';
 import { seedTempProductIfEmpty } from '../src/seed/products.seed.js';
@@ -23,6 +24,8 @@ const middlewares = (app) => {
 };
 
 const routes = (app) => {
+    app.use(`${BASE_PATH}/products`, productRoutes);
+
     app.get(`${BASE_PATH}/health`, (request, response) => {
         response.status(200).json({
             status: 'Healthy',
