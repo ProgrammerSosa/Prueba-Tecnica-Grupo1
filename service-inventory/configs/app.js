@@ -31,8 +31,15 @@ const routes = (app) => {
             status: 'Healthy',
             timestamp: new Date().toISOString(),
             service: 'Service Inventory - Gestión de Inventario',
+            version: 'sprint-3',
+            endpoints: {
+                products: `${BASE_PATH}/products`,
+                entries: `${BASE_PATH}/entries`,
+                outputs: `${BASE_PATH}/outputs`,
+            },
         });
     });
+
 
     app.use(`${BASE_PATH}/entries`, entryRoutes);
     app.use(`${BASE_PATH}/outputs`, outputRoutes);
