@@ -1,44 +1,34 @@
 import Output from './output.model.js';
 import Product from '../products/product.model.js';
+import { parsePositiveQuantity } from '../../helpers/quantity-rules.js';
+import {
+    InventoryMessages,
+    successResponse,
+    errorResponse,
+} from '../../helpers/inventory-messages.js';
 
 export const createOutput = async (req, res) => {
     try {
-        const { productId, quantity, note } = req.body;
+        const { productId, note } = req.body;
+        const quantityCheck = parsePositiveQuantity(req.body.quantity);
 
-        if (quantity < 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad no puede ser un número negativo',
-            });
+        if (!quantityCheck.valid) {
+            return errorResponse(res, 400, quantityCheck.message);
         }
 
-        if (quantity <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad debe ser mayor a 0',
-            });
-        }
-
+        const { quantity } = quantityCheck;
         const product = await Product.findById(productId);
 
         if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Producto no encontrado',
-            });
+            return errorResponse(res, 404, InventoryMessages.PRODUCT_NOT_FOUND);
         }
 
         if (!product.isActive) {
-            return res.status(400).json({
-                success: false,
-                message: 'No se pueden registrar salidas para un producto inactivo',
-            });
+            return errorResponse(res, 400, InventoryMessages.OUTPUT_INACTIVE_PRODUCT);
         }
 
         if (quantity > product.existences) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad de salida no puede ser mayor a la existencia del producto',
+            return errorResponse(res, 400, InventoryMessages.OUTPUT_INSUFFICIENT_STOCK, {
                 error: 'INSUFFICIENT_STOCK',
                 available: product.existences,
                 requested: quantity,
@@ -60,18 +50,12 @@ export const createOutput = async (req, res) => {
 
         await output.save();
 
-        return res.status(201).json({
-            success: true,
-            message: 'Salida registrada exitosamente',
-            data: {
-                output,
-                product: updatedProduct,
-            },
+        return successResponse(res, 201, InventoryMessages.OUTPUT_SUCCESS, {
+            output,
+            product: updatedProduct,
         });
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: 'Error al registrar la salida',
+        return errorResponse(res, 400, InventoryMessages.OUTPUT_ERROR, {
             error: error.message,
         });
     }

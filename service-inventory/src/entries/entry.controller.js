@@ -1,38 +1,30 @@
 import Entry from './entry.model.js';
 import Product from '../products/product.model.js';
+import { parsePositiveQuantity } from '../../helpers/quantity-rules.js';
+import {
+    InventoryMessages,
+    successResponse,
+    errorResponse,
+} from '../../helpers/inventory-messages.js';
 
 export const createEntry = async (req, res) => {
     try {
-        const { productId, quantity, note } = req.body;
+        const { productId, note } = req.body;
+        const quantityCheck = parsePositiveQuantity(req.body.quantity);
 
-        if (quantity < 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad no puede ser un número negativo',
-            });
+        if (!quantityCheck.valid) {
+            return errorResponse(res, 400, quantityCheck.message);
         }
 
-        if (quantity <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad debe ser mayor a 0',
-            });
-        }
-
+        const { quantity } = quantityCheck;
         const product = await Product.findById(productId);
 
         if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Producto no encontrado',
-            });
+            return errorResponse(res, 404, InventoryMessages.PRODUCT_NOT_FOUND);
         }
 
         if (!product.isActive) {
-            return res.status(400).json({
-                success: false,
-                message: 'No se pueden registrar entradas para un producto inactivo',
-            });
+            return errorResponse(res, 400, InventoryMessages.ENTRY_INACTIVE_PRODUCT);
         }
 
         const updatedProduct = await Product.findByIdAndUpdate(
@@ -50,18 +42,12 @@ export const createEntry = async (req, res) => {
 
         await entry.save();
 
-        return res.status(201).json({
-            success: true,
-            message: 'Entrada registrada exitosamente',
-            data: {
-                entry,
-                product: updatedProduct,
-            },
+        return successResponse(res, 201, InventoryMessages.ENTRY_SUCCESS, {
+            entry,
+            product: updatedProduct,
         });
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: 'Error al registrar la entrada',
+        return errorResponse(res, 400, InventoryMessages.ENTRY_ERROR, {
             error: error.message,
         });
     }

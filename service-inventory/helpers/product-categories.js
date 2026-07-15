@@ -1,9 +1,5 @@
 'use strict';
 
-/**
- * Categorías disponibles para productos.
- * Se pueden agregar nuevas en runtime mediante addCategory().
- */
 const categories = [
     'ELECTRODOMESTICOS',
     'ELECTRONICA',
@@ -14,31 +10,19 @@ const categories = [
     'JUGUETES',
 ];
 
-/**
- * Normaliza el nombre de una categoría (trim + mayúsculas).
- */
 export const normalizeCategory = (category) => {
     if (typeof category !== 'string') return '';
     return category.trim().toUpperCase();
 };
 
-/**
- * Obtiene una copia de las categorías actuales.
- */
+
 export const getCategories = () => [...categories];
 
-/**
- * Verifica si una categoría existe en el enum.
- */
 export const isValidCategory = (category) => {
     const normalized = normalizeCategory(category);
     return categories.includes(normalized);
 };
 
-/**
- * Agrega una nueva categoría al enum.
- * @returns {{ success: boolean, category?: string, message: string, categories: string[] }}
- */
 export const addCategoryToEnum = (category) => {
     const normalized = normalizeCategory(category);
 
