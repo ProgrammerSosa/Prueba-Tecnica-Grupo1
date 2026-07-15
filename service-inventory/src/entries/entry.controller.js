@@ -5,6 +5,20 @@ export const createEntry = async (req, res) => {
     try {
         const { productId, quantity, note } = req.body;
 
+        if (quantity < 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'La cantidad no puede ser un número negativo',
+            });
+        }
+
+        if (quantity <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'La cantidad debe ser mayor a 0',
+            });
+        }
+
         const product = await Product.findById(productId);
 
         if (!product) {
@@ -36,18 +50,18 @@ export const createEntry = async (req, res) => {
 
         await entry.save();
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
-            message: 'Entrada de inventario registrada exitosamente',
+            message: 'Entrada registrada exitosamente',
             data: {
                 entry,
                 product: updatedProduct,
             },
         });
     } catch (error) {
-        res.status(400).json({
+        return res.status(400).json({
             success: false,
-            message: 'Error al registrar la entrada de inventario',
+            message: 'Error al registrar la entrada',
             error: error.message,
         });
     }

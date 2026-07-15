@@ -5,6 +5,20 @@ export const createOutput = async (req, res) => {
     try {
         const { productId, quantity, note } = req.body;
 
+        if (quantity < 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'La cantidad no puede ser un número negativo',
+            });
+        }
+
+        if (quantity <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'La cantidad debe ser mayor a 0',
+            });
+        }
+
         const product = await Product.findById(productId);
 
         if (!product) {
@@ -46,20 +60,19 @@ export const createOutput = async (req, res) => {
 
         await output.save();
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
-            message: 'Salida de inventario registrada exitosamente',
+            message: 'Salida registrada exitosamente',
             data: {
                 output,
                 product: updatedProduct,
             },
         });
     } catch (error) {
-        res.status(400).json({
+        return res.status(400).json({
             success: false,
-            message: 'Error al registrar la salida de inventario',
+            message: 'Error al registrar la salida',
             error: error.message,
         });
     }
 };
-
