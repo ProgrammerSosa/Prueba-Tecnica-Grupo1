@@ -1,9 +1,5 @@
 'use strict';
 
-/**
- * Mensajes estandarizados del servicio de inventario (entradas / salidas).
- * Un solo lugar para mantener el formato de respuesta del sprint.
- */
 export const InventoryMessages = {
     ENTRY_SUCCESS: 'Entrada registrada exitosamente',
     ENTRY_ERROR: 'Error al registrar la entrada',
@@ -23,9 +19,6 @@ export const InventoryMessages = {
     QUANTITY_ZERO: 'La cantidad debe ser mayor a 0',
 };
 
-/**
- * Respuesta de éxito estandarizada: { success, message, data }
- */
 export const successResponse = (res, statusCode, message, data) => {
     return res.status(statusCode).json({
         success: true,
@@ -34,9 +27,6 @@ export const successResponse = (res, statusCode, message, data) => {
     });
 };
 
-/**
- * Respuesta de error estandarizada: { success, message, ...extra }
- */
 export const errorResponse = (res, statusCode, message, extra = {}) => {
     return res.status(statusCode).json({
         success: false,

@@ -3,10 +3,6 @@
 import { body } from 'express-validator';
 import { InventoryMessages } from './inventory-messages.js';
 
-/**
- * Valida una cantidad de movimiento de inventario.
- * @returns {{ valid: true, quantity: number } | { valid: false, message: string }}
- */
 export const parsePositiveQuantity = (value) => {
     if (value === undefined || value === null || value === '') {
         return { valid: false, message: InventoryMessages.QUANTITY_REQUIRED };
@@ -29,9 +25,6 @@ export const parsePositiveQuantity = (value) => {
     return { valid: true, quantity };
 };
 
-/**
- * Cadena express-validator reutilizable para body.quantity en entries y outputs.
- */
 export const quantityBodyValidator = body('quantity')
     .notEmpty()
     .withMessage(InventoryMessages.QUANTITY_REQUIRED)

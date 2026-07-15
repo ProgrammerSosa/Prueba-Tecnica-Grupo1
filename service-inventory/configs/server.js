@@ -1,4 +1,3 @@
-// Seeders
 
 export const seedInitialData = async () => {
     try {
