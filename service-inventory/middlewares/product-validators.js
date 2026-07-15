@@ -6,7 +6,7 @@ import { validateJWT } from './validate-JWT.js';
 import { getCategories, isValidCategory, normalizeCategory } from '../helpers/product-categories.js';
 
 export const validateCreateProduct = [
-    //validateJWT,
+    validateJWT,
     body('name')
         .trim()
         .notEmpty()
