@@ -1,10 +1,5 @@
 import { fetchProducts, getDefaultThreshold } from '../../helpers/inventory-service.js';
 
-/**
- * GET /alerts/low-stock?threshold=5
- * Productos cuya existencia es menor o igual al umbral (por defecto 5,
- * configurable con LOW_STOCK_THRESHOLD o el query param ?threshold=).
- */
 export const getLowStockAlert = async (req, res, next) => {
     try {
         const threshold =
@@ -41,10 +36,6 @@ export const getLowStockAlert = async (req, res, next) => {
     }
 };
 
-/**
- * GET /alerts/out-of-stock
- * Productos completamente agotados (existencia igual a 0).
- */
 export const getOutOfStockAlert = async (req, res, next) => {
     try {
         const products = await fetchProducts(req.token);

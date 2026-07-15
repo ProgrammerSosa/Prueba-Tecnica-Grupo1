@@ -29,3 +29,8 @@ export const resendVerification = async (email) => {
 export const getProfile = async () => {
     return await axiosAuth.get("/auth/profile");
 }
+
+export const refreshSession = async () => {
+    return await axiosAuth.post("/auth/refresh");
+}
+

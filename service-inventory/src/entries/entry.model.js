@@ -11,7 +11,11 @@ const entrySchema = new mongoose.Schema({
     quantity: {
         type: Number,
         required: [true, 'La cantidad es obligatoria'],
-        min: [1, 'La cantidad debe ser al menos 1'],
+        min: [0, 'La cantidad no puede ser un número negativo'],
+        validate: {
+            validator: (value) => typeof value === 'number' && value > 0,
+            message: 'La cantidad no puede ser un número negativo ni cero',
+        },
     },
     note: {
         type: String,

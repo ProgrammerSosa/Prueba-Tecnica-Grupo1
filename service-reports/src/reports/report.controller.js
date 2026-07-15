@@ -3,10 +3,6 @@ import { fetchProducts, getDefaultThreshold } from '../../helpers/inventory-serv
 
 const round2 = (number) => Math.round(number * 100) / 100;
 
-/**
- * Agrupa los productos por categoría acumulando cantidad de productos,
- * unidades en existencia y valor del inventario (precio * existencia).
- */
 const buildCategorySummary = (products) => {
     const byCategory = new Map();
 
@@ -31,10 +27,6 @@ const buildCategorySummary = (products) => {
         .sort((a, b) => b.totalValue - a.totalValue);
 };
 
-/**
- * Suma las salidas registradas por producto (colección 'outputs' que escribe
- * el Servicio A) y devuelve los más vendidos en orden descendente.
- */
 const aggregateTopProducts = (limit) =>
     Output.aggregate([
         {
@@ -48,9 +40,6 @@ const aggregateTopProducts = (limit) =>
         { $limit: limit },
     ]);
 
-/**
- * Une las salidas agregadas con la información de productos del Servicio A.
- */
 const enrichTopProducts = (rows, products) => {
     const productsById = new Map(products.map((product) => [String(product._id), product]));
 
@@ -69,10 +58,6 @@ const enrichTopProducts = (rows, products) => {
     });
 };
 
-/**
- * GET /reports/top-products?limit=5
- * Productos más vendidos según las salidas registradas en el inventario.
- */
 export const getTopProducts = async (req, res, next) => {
     try {
         const limit = req.query.limit !== undefined ? req.query.limit : 5;
@@ -98,10 +83,6 @@ export const getTopProducts = async (req, res, next) => {
     }
 };
 
-/**
- * GET /reports/categories
- * Resumen del inventario agrupado por categoría.
- */
 export const getCategoriesReport = async (req, res, next) => {
     try {
         const products = await fetchProducts(req.token);
@@ -120,10 +101,6 @@ export const getCategoriesReport = async (req, res, next) => {
     }
 };
 
-/**
- * GET /reports/summary
- * Reporte general del inventario: totales, alertas, categorías y más vendidos.
- */
 export const getSummaryReport = async (req, res, next) => {
     try {
         const threshold = getDefaultThreshold();
