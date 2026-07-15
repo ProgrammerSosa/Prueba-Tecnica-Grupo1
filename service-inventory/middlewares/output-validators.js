@@ -2,6 +2,30 @@ import { body } from 'express-validator';
 import { checkValidators } from './checkValidators.js';
 import { validateJWT } from './validate-JWT.js';
 
+const validatePositiveQuantity = body('quantity')
+    .notEmpty()
+    .withMessage('La cantidad es obligatoria')
+    .isNumeric()
+    .withMessage('La cantidad debe ser un número')
+    .custom((value) => {
+        const quantity = Number(value);
+
+        if (Number.isNaN(quantity)) {
+            throw new Error('La cantidad debe ser un número válido');
+        }
+
+        if (quantity < 0) {
+            throw new Error('La cantidad no puede ser un número negativo');
+        }
+
+        if (quantity === 0) {
+            throw new Error('La cantidad debe ser mayor a 0');
+        }
+
+        return true;
+    })
+    .toFloat();
+
 export const validateCreateOutput = [
     validateJWT,
     body('productId')
@@ -9,12 +33,7 @@ export const validateCreateOutput = [
         .withMessage('El ID del producto es obligatorio')
         .isMongoId()
         .withMessage('El ID del producto no es válido'),
-    body('quantity')
-        .notEmpty()
-        .withMessage('La cantidad es obligatoria')
-        .isFloat({ gt: 0 })
-        .withMessage('La cantidad debe ser un número mayor a 0')
-        .toFloat(),
+    validatePositiveQuantity,
     body('note')
         .optional()
         .isString()
