@@ -70,6 +70,60 @@
   .auth-field-error {
     @apply mt-1 text-xs text-danger;
   }
+
+  .panel-card {
+    @apply rounded-xl border border-pollen/25 bg-cream-comb p-5 text-cacao-ink shadow-md;
+  }
+
+  .panel-input {
+    @apply w-full rounded-lg border border-pollen/40 bg-white px-3 py-2.5 text-sm text-cacao-ink
+      placeholder:text-honeycomb/50 transition
+      focus:border-honey-nectar focus:outline-none;
+  }
+
+  .panel-label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-honeycomb;
+  }
+
+  .panel-btn {
+    @apply inline-flex items-center justify-center rounded-full bg-honey-nectar px-4 py-2.5 text-xs font-bold
+      uppercase tracking-[0.12em] text-cacao-ink shadow-md transition hover:brightness-110
+      disabled:cursor-not-allowed disabled:opacity-70;
+  }
+
+  .panel-btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full border border-pollen/50 bg-transparent px-4 py-2.5
+      text-xs font-semibold uppercase tracking-[0.1em] text-cacao-ink transition hover:bg-honeycomb/5;
+  }
+
+  .panel-btn-danger {
+    @apply inline-flex items-center justify-center rounded-full border border-danger/40 bg-danger/10 px-3 py-2
+      text-xs font-semibold uppercase tracking-[0.08em] text-danger transition hover:bg-danger/20;
+  }
+
+  .data-table-wrap {
+    @apply overflow-x-auto rounded-xl border border-pollen/20;
+  }
+
+  .data-table {
+    @apply w-full min-w-[640px] border-collapse text-left text-sm;
+  }
+
+  .data-table thead {
+    @apply bg-honeycomb text-cream-comb;
+  }
+
+  .data-table th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em];
+  }
+
+  .data-table td {
+    @apply border-t border-pollen/15 px-4 py-3 text-cacao-ink;
+  }
+
+  .data-table tbody tr {
+    @apply bg-cream-comb transition hover:bg-honey-nectar/10;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
