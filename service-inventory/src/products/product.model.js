@@ -22,6 +22,7 @@ const productSchema = mongoose.Schema(
         },
         price: {
             type: Number,
+            required: [true, 'El precio es obligatorio'],
             default: 0,
         },
         existences: {
