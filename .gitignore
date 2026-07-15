@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
-
+GestionDeRestaurantes-main/
+*.md
 # Environment variables
 .env
 .env.*

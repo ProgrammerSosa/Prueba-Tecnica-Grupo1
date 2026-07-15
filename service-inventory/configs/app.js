@@ -8,6 +8,9 @@ import { helmetConfiguration } from './helmet-configuration.js';
 import { requestLimit } from '../middlewares/request-limit.js';
 import { errorHandler } from '../middlewares/handle-errors.js';
 import productRoutes from '../src/products/product.routes.js';
+import entryRoutes from '../src/entries/entry.routes.js';
+import outputRoutes from '../src/outputs/output.routes.js';
+import { seedTempProductIfEmpty } from '../src/seed/products.seed.js';
 
 const BASE_PATH = '/api/v1';
 
@@ -16,8 +19,9 @@ const middlewares = (app) => {
     app.use(express.json({ limit: '10mb' }));
     app.use(cors(corsOptions));
     app.use(helmet(helmetConfiguration));
+    app.use(requestLimit);
     app.use(morgan('dev'));
-}
+};
 
 const routes = (app) => {
     app.use(`${BASE_PATH}/products`, productRoutes);
@@ -26,17 +30,20 @@ const routes = (app) => {
         response.status(200).json({
             status: 'Healthy',
             timestamp: new Date().toISOString(),
-            service: 'Prueba Grupo #1'
-        })
-    })
+            service: 'Service Inventory - Gestión de Inventario',
+        });
+    });
+
+    app.use(`${BASE_PATH}/entries`, entryRoutes);
+    app.use(`${BASE_PATH}/outputs`, outputRoutes);
 
     app.use((req, res) => {
         res.status(404).json({
             success: false,
-            message: 'Endpoint no encontrado'
-        })
-    })
-}
+            message: 'Endpoint no encontrado',
+        });
+    });
+};
 
 export const initServer = async () => {
     const app = express();
@@ -45,17 +52,21 @@ export const initServer = async () => {
 
     try {
         await dbConnection();
+        await seedTempProductIfEmpty();
+
         middlewares(app);
         routes(app);
 
         app.use(errorHandler);
 
         app.listen(PORT, () => {
-            console.log(`Servidor corriendo en el puerto ${PORT}`);
+            console.log(`Servidor de inventario corriendo en el puerto ${PORT}`);
             console.log(`Health check: http://localhost:${PORT}${BASE_PATH}/health`);
-        })
+            console.log(`POST entries: http://localhost:${PORT}${BASE_PATH}/entries`);
+            console.log(`POST outputs: http://localhost:${PORT}${BASE_PATH}/outputs`);
+        });
     } catch (error) {
         console.error(`Error al iniciar servidor: ${error.message}`);
         process.exit(1);
     }
-}
+};
