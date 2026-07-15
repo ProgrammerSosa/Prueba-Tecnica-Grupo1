@@ -1,77 +1,171 @@
+'use strict';
+
 import Output from './output.model.js';
 import Product from '../products/product.model.js';
+import { buildPaginatedMeta, parsePagination } from '../../helpers/pagination.js';
+
+const productSelect = 'name category price existences isActive';
+
+const buildOutputFilter = (query = {}) => {
+    const filter = {};
+
+    if (query.productId) {
+        filter.productId = query.productId;
+    }
+
+    if (query.isActive !== undefined && query.isActive !== '') {
+        filter.isActive = query.isActive === 'true' || query.isActive === true;
+    } else {
+        filter.isActive = true;
+    }
+
+    if (query.from || query.to) {
+        filter.createdAt = {};
+        if (query.from) filter.createdAt.$gte = new Date(query.from);
+        if (query.to) filter.createdAt.$lte = new Date(query.to);
+    }
+
+    return filter;
+};
 
 export const createOutput = async (req, res) => {
     try {
         const { productId, quantity, note } = req.body;
+        const qty = Number(quantity);
 
-        if (quantity < 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad no puede ser un número negativo',
-            });
-        }
-
-        if (quantity <= 0) {
+        if (!Number.isFinite(qty) || qty <= 0) {
             return res.status(400).json({
                 success: false,
                 message: 'La cantidad debe ser mayor a 0',
+                error: 'INVALID_QUANTITY',
             });
         }
 
-        const product = await Product.findById(productId);
+        // Descuento atómico solo si hay stock suficiente y el producto está activo
+        const updatedProduct = await Product.findOneAndUpdate(
+            {
+                _id: productId,
+                isActive: true,
+                existences: { $gte: qty },
+            },
+            { $inc: { existences: -qty } },
+            { new: true, runValidators: true }
+        );
 
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Producto no encontrado',
-            });
-        }
+        if (!updatedProduct) {
+            const product = await Product.findById(productId);
 
-        if (!product.isActive) {
-            return res.status(400).json({
-                success: false,
-                message: 'No se pueden registrar salidas para un producto inactivo',
-            });
-        }
+            if (!product) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Producto no encontrado',
+                    error: 'PRODUCT_NOT_FOUND',
+                });
+            }
 
-        if (quantity > product.existences) {
+            if (!product.isActive) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'No se pueden registrar salidas para un producto inactivo',
+                    error: 'PRODUCT_INACTIVE',
+                });
+            }
+
             return res.status(400).json({
                 success: false,
                 message: 'La cantidad de salida no puede ser mayor a la existencia del producto',
                 error: 'INSUFFICIENT_STOCK',
                 available: product.existences,
-                requested: quantity,
+                requested: qty,
             });
         }
 
-        const updatedProduct = await Product.findByIdAndUpdate(
-            productId,
-            { $inc: { existences: -quantity } },
-            { new: true, runValidators: true }
-        );
+        try {
+            const output = await Output.create({
+                productId,
+                quantity: qty,
+                note: note || '',
+                createdBy: req.account?.id || null,
+            });
 
-        const output = new Output({
-            productId,
-            quantity,
-            note: note || '',
-            createdBy: req.account?.id || null,
-        });
-
-        await output.save();
-
-        return res.status(201).json({
-            success: true,
-            message: 'Salida registrada exitosamente',
-            data: {
-                output,
-                product: updatedProduct,
-            },
-        });
+            return res.status(201).json({
+                success: true,
+                message: 'Salida registrada exitosamente',
+                data: {
+                    output,
+                    product: updatedProduct,
+                },
+            });
+        } catch (saveError) {
+            // Compensación: devolver stock si falla el registro del movimiento
+            await Product.findByIdAndUpdate(productId, {
+                $inc: { existences: qty },
+            });
+            throw saveError;
+        }
     } catch (error) {
+        console.error('Error al registrar salida:', error.message);
         return res.status(400).json({
             success: false,
             message: 'Error al registrar la salida',
+            error: error.message,
+        });
+    }
+};
+
+export const getOutputs = async (req, res) => {
+    try {
+        const filter = buildOutputFilter(req.query);
+        const { page, limit, skip, paginated } = parsePagination(req.query);
+
+        const query = Output.find(filter)
+            .populate('productId', productSelect)
+            .sort({ createdAt: -1 });
+
+        const [outputs, total] = await Promise.all([
+            paginated ? query.skip(skip).limit(limit).lean() : query.lean(),
+            Output.countDocuments(filter),
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            total,
+            ...(paginated && { pagination: buildPaginatedMeta({ page, limit, total }) }),
+            outputs,
+        });
+    } catch (error) {
+        console.error('Error al listar salidas:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener las salidas',
+            error: error.message,
+        });
+    }
+};
+
+export const getOutputById = async (req, res) => {
+    try {
+        const output = await Output.findById(req.params.id)
+            .populate('productId', productSelect)
+            .lean();
+
+        if (!output) {
+            return res.status(404).json({
+                success: false,
+                message: 'Salida no encontrada',
+                error: 'OUTPUT_NOT_FOUND',
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            output,
+        });
+    } catch (error) {
+        console.error('Error al obtener salida:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener la salida',
             error: error.message,
         });
     }

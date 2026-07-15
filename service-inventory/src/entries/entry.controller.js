@@ -1,67 +1,157 @@
+'use strict';
+
 import Entry from './entry.model.js';
 import Product from '../products/product.model.js';
+import { buildPaginatedMeta, parsePagination } from '../../helpers/pagination.js';
+
+const productSelect = 'name category price existences isActive';
+
+const buildEntryFilter = (query = {}) => {
+    const filter = {};
+
+    if (query.productId) {
+        filter.productId = query.productId;
+    }
+
+    if (query.isActive !== undefined && query.isActive !== '') {
+        filter.isActive = query.isActive === 'true' || query.isActive === true;
+    } else {
+        filter.isActive = true;
+    }
+
+    if (query.from || query.to) {
+        filter.createdAt = {};
+        if (query.from) filter.createdAt.$gte = new Date(query.from);
+        if (query.to) filter.createdAt.$lte = new Date(query.to);
+    }
+
+    return filter;
+};
 
 export const createEntry = async (req, res) => {
     try {
         const { productId, quantity, note } = req.body;
+        const qty = Number(quantity);
 
-        if (quantity < 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad no puede ser un número negativo',
-            });
-        }
-
-        if (quantity <= 0) {
+        if (!Number.isFinite(qty) || qty <= 0) {
             return res.status(400).json({
                 success: false,
                 message: 'La cantidad debe ser mayor a 0',
+                error: 'INVALID_QUANTITY',
             });
         }
 
-        const product = await Product.findById(productId);
-
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Producto no encontrado',
-            });
-        }
-
-        if (!product.isActive) {
-            return res.status(400).json({
-                success: false,
-                message: 'No se pueden registrar entradas para un producto inactivo',
-            });
-        }
-
-        const updatedProduct = await Product.findByIdAndUpdate(
-            productId,
-            { $inc: { existences: quantity } },
+        // Actualización atómica: evita condiciones de carrera y verifica producto activo
+        const updatedProduct = await Product.findOneAndUpdate(
+            { _id: productId, isActive: true },
+            { $inc: { existences: qty } },
             { new: true, runValidators: true }
         );
 
-        const entry = new Entry({
-            productId,
-            quantity,
-            note: note || '',
-            createdBy: req.account?.id || null,
-        });
+        if (!updatedProduct) {
+            const product = await Product.findById(productId);
 
-        await entry.save();
+            if (!product) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Producto no encontrado',
+                    error: 'PRODUCT_NOT_FOUND',
+                });
+            }
 
-        return res.status(201).json({
-            success: true,
-            message: 'Entrada registrada exitosamente',
-            data: {
-                entry,
-                product: updatedProduct,
-            },
-        });
+            return res.status(400).json({
+                success: false,
+                message: 'No se pueden registrar entradas para un producto inactivo',
+                error: 'PRODUCT_INACTIVE',
+            });
+        }
+
+        try {
+            const entry = await Entry.create({
+                productId,
+                quantity: qty,
+                note: note || '',
+                createdBy: req.account?.id || null,
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'Entrada registrada exitosamente',
+                data: {
+                    entry,
+                    product: updatedProduct,
+                },
+            });
+        } catch (saveError) {
+            // Compensación si falla el registro del movimiento
+            await Product.findByIdAndUpdate(productId, {
+                $inc: { existences: -qty },
+            });
+            throw saveError;
+        }
     } catch (error) {
+        console.error('Error al registrar entrada:', error.message);
         return res.status(400).json({
             success: false,
             message: 'Error al registrar la entrada',
+            error: error.message,
+        });
+    }
+};
+
+export const getEntries = async (req, res) => {
+    try {
+        const filter = buildEntryFilter(req.query);
+        const { page, limit, skip, paginated } = parsePagination(req.query);
+
+        const query = Entry.find(filter)
+            .populate('productId', productSelect)
+            .sort({ createdAt: -1 });
+
+        const [entries, total] = await Promise.all([
+            paginated ? query.skip(skip).limit(limit).lean() : query.lean(),
+            Entry.countDocuments(filter),
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            total,
+            ...(paginated && { pagination: buildPaginatedMeta({ page, limit, total }) }),
+            entries,
+        });
+    } catch (error) {
+        console.error('Error al listar entradas:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener las entradas',
+            error: error.message,
+        });
+    }
+};
+
+export const getEntryById = async (req, res) => {
+    try {
+        const entry = await Entry.findById(req.params.id)
+            .populate('productId', productSelect)
+            .lean();
+
+        if (!entry) {
+            return res.status(404).json({
+                success: false,
+                message: 'Entrada no encontrada',
+                error: 'ENTRY_NOT_FOUND',
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            entry,
+        });
+    } catch (error) {
+        console.error('Error al obtener entrada:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener la entrada',
             error: error.message,
         });
     }
