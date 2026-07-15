@@ -27,7 +27,7 @@ export const validateCreateProduct = [
         }),
     body('price')
         .notEmpty()
-        .isFloat({ min: 0.1 })
+        .isFloat({ min: 0.01 })
         .withMessage('El precio debe ser un número mayor a 0'),
     body('existences')
         .optional()
@@ -87,6 +87,39 @@ export const validateGetProductById = [
     checkValidators,
 ];
 
+export const validateListProducts = [
+    query('isActive')
+        .optional()
+        .isIn(['true', 'false'])
+        .withMessage('isActive debe ser true o false'),
+    query('category')
+        .optional()
+        .trim()
+        .customSanitizer((value) => normalizeCategory(value)),
+    query('name')
+        .optional()
+        .trim()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('El nombre de búsqueda debe tener entre 1 y 100 caracteres'),
+    query('page')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('page debe ser un entero mayor o igual a 1'),
+    query('limit')
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage('limit debe ser un entero entre 1 y 100'),
+    query('minStock')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('minStock debe ser un entero mayor o igual a 0'),
+    query('maxStock')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('maxStock debe ser un entero mayor o igual a 0'),
+    checkValidators,
+];
+
 export const validateSearchProducts = [
     query('name')
         .optional()
@@ -99,6 +132,18 @@ export const validateSearchProducts = [
         .customSanitizer((value) => normalizeCategory(value))
         .isLength({ min: 1, max: 50 })
         .withMessage('La categoría de búsqueda debe tener entre 1 y 50 caracteres'),
+    query('isActive')
+        .optional()
+        .isIn(['true', 'false'])
+        .withMessage('isActive debe ser true o false'),
+    checkValidators,
+];
+
+export const validateLowStock = [
+    query('threshold')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('threshold debe ser un entero mayor o igual a 0'),
     checkValidators,
 ];
 

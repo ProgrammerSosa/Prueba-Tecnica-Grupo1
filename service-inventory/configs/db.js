@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const dbConnection = async () => {
     try {
@@ -24,12 +24,13 @@ export const dbConnection = async () => {
 
         await mongoose.connect(process.env.URI_MONGO, {
             serverSelectionTimeoutMS: 5000,
-            maxPoolSize: 10
-        })
+            maxPoolSize: 10,
+        });
     } catch (error) {
         console.log(`Error al conectar la db: ${error}`);
+        throw error;
     }
-}
+};
 
 const gracefulShutdown = async (signal) => {
     console.log(`MongoDB | Received ${signal}. Closing database connection...`);
@@ -41,7 +42,7 @@ const gracefulShutdown = async (signal) => {
         console.error('MongoDB | Error during graceful shutdown:', error.message);
         process.exit(1);
     }
-}
+};
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
