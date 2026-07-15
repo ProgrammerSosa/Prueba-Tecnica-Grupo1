@@ -14,7 +14,6 @@ import {
   validateForgotPassword,
   validateResetPassword,
 } from '../../middlewares/validation.js';
-import { validateAdmin } from '../../middlewares/validate-admin.js';
 
 const router = Router();
 
@@ -73,8 +72,6 @@ const router = Router();
 router.post(
   '/register',
   authRateLimit,
-  validateJWT,
-  validateAdmin,
   upload.single('profilePicture'),
   handleUploadError,
   validateRegister,

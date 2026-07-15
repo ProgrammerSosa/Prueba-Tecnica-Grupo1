@@ -180,9 +180,7 @@ export const loginUserHelper = async (emailOrUsername, password) => {
       throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
     }
 
-    // Generate JWT with role claim
-    const role = user.UserRoles?.[0]?.Role?.Name || 'Coordinador';
-    const token = await generateJWT(user.Id.toString(), { role });
+    const token = await generateJWT(user.Id.toString());
 
     // Calcular fecha de expiración basada en la configuración
     const expiresInMs = getExpirationTime(process.env.JWT_EXPIRES_IN || '30m');
@@ -194,7 +192,6 @@ export const loginUserHelper = async (emailOrUsername, password) => {
       id: fullUser.id,
       username: fullUser.username,
       profilePicture: fullUser.profilePicture,
-      role: fullUser.role,
     };
 
     // AuthResponseDto equivalent structure
