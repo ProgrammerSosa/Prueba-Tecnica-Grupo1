@@ -7,7 +7,8 @@ import { corsOptions } from './cors-configuration.js';
 import { helmetConfiguration } from './helmet-configuration.js';
 import { requestLimit } from '../middlewares/request-limit.js';
 import { errorHandler } from '../middlewares/handle-errors.js';
-import userRoutes from '../src/users/user.routes.js';
+import alertRoutes from '../src/alerts/alert.routes.js';
+import reportRoutes from '../src/reports/report.routes.js';
 
 const BASE_PATH = '/api/v1';
 
@@ -17,10 +18,12 @@ const middlewares = (app) => {
     app.use(cors(corsOptions));
     app.use(helmet(helmetConfiguration));
     app.use(morgan('dev'));
+    app.use(requestLimit);
 }
 
 const routes = (app) => {
-    app.use(`${BASE_PATH}/users`, userRoutes);
+    app.use(`${BASE_PATH}/alerts`, alertRoutes);
+    app.use(`${BASE_PATH}/reports`, reportRoutes);
 
     app.get(`${BASE_PATH}/health`, (request, response) => {
         response.status(200).json({

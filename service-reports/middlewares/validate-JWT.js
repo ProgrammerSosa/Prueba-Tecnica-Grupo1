@@ -41,6 +41,9 @@ export const validateJWT = (req, res, next) => {
             role: decoded.role || 'USER_ROLE',
         };
 
+        // Token original disponible para reenviarlo a otros servicios (ej. Servicio A)
+        req.token = token;
+
         next();
     } catch (error) {
         console.error('Error de validación JWT:', error.message);
