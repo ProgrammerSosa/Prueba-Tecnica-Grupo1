@@ -62,8 +62,6 @@ export const initServer = async () => {
         app.listen(PORT, () => {
             console.log(`Servidor de inventario corriendo en el puerto ${PORT}`);
             console.log(`Health check: http://localhost:${PORT}${BASE_PATH}/health`);
-            console.log(`POST entries: http://localhost:${PORT}${BASE_PATH}/entries`);
-            console.log(`POST outputs: http://localhost:${PORT}${BASE_PATH}/outputs`);
         });
     } catch (error) {
         console.error(`Error al iniciar servidor: ${error.message}`);

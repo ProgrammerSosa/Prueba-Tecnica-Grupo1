@@ -1,46 +1,69 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
-import { useVerifyEmail } from '../hooks/useVerifyEmail';
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
+import { useVerifyEmail } from "../hooks/useVerifyEmail";
+import { AuthShell } from "../components/AuthShell";
+import { BeeIcon } from "../components/icons/BeeIcon";
 
 export const VerifyEmailPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
-
+  const token = searchParams.get("token");
   const { status, message } = useVerifyEmail(token);
+  const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#1a1a2e', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ background: '#16213e', padding: '2rem', borderRadius: '8px', width: '100%', maxWidth: '400px', color: '#fff', textAlign: 'center' }}>
-        {status === 'verifying' && (
+    <AuthShell subtitle="Confirma tu lugar en la colmena">
+      <div className="text-center">
+        <motion.div
+          initial={prefersReducedMotion ? false : { scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="mb-4 flex justify-center"
+        >
+          <BeeIcon
+            className="h-14 w-14 text-honey-nectar"
+            animate={status === "verifying"}
+          />
+        </motion.div>
+
+        {status === "verifying" && (
           <>
-            <h2 style={{ marginBottom: '1rem' }}>Verificando...</h2>
-            <p style={{ color: '#aaa' }}>Estamos verificando tu identidad.</p>
+            <h2 className="mb-2 font-display text-2xl font-bold text-cacao-ink">
+              Verificando...
+            </h2>
+            <p className="text-sm text-honeycomb">
+              Estamos confirmando tu acceso al panal.
+            </p>
           </>
         )}
 
-        {status === 'success' && (
+        {status === "success" && (
           <>
-            <h2 style={{ color: '#4CAF50', marginBottom: '1rem' }}>¡Email Verificado!</h2>
-            <p style={{ color: '#aaa', marginBottom: '1.5rem' }}>Tu correo ha sido verificado exitosamente.</p>
-            <button onClick={() => navigate('/')}
-              style={{ padding: '0.75rem 2rem', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
-              Iniciar Sesión
+            <h2 className="mb-2 font-display text-2xl font-bold text-cacao-ink">
+              Correo verificado
+            </h2>
+            <p className="mb-6 text-sm text-honeycomb">
+              Ya perteneces a la colmena. Puedes entrar cuando quieras.
+            </p>
+            <button onClick={() => navigate("/")} className="auth-btn-primary">
+              Entrar a la colmena
             </button>
           </>
         )}
 
-        {status === 'error' && (
+        {status === "error" && (
           <>
-            <h2 style={{ color: '#ff6b6b', marginBottom: '1rem' }}>Error de Verificación</h2>
-            <p style={{ color: '#aaa', marginBottom: '1.5rem' }}>{message || 'El enlace ha expirado o es inválido.'}</p>
-            <button onClick={() => navigate('/')}
-              style={{ padding: '0.75rem 2rem', background: '#333', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
+            <h2 className="mb-2 font-display text-2xl font-bold text-danger">
+              No se pudo verificar
+            </h2>
+            <p className="mb-6 text-sm text-honeycomb">
+              {message || "El enlace expiró o no es válido. Reintenta el vuelo."}
+            </p>
+            <button onClick={() => navigate("/")} className="auth-btn-secondary">
               Volver al inicio
             </button>
           </>
         )}
       </div>
-    </div>
+    </AuthShell>
   );
 };

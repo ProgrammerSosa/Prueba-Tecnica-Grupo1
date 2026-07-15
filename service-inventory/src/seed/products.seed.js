@@ -18,9 +18,9 @@ export const seedTempProductIfEmpty = async () => {
 
         const product = await Product.create({
             name: 'Producto Temporal',
-            category: 'General',
+            category: 'ALIMENTOS',
             price: 0,
-            stock: 0,
+            existences: 0,
             isActive: true,
         });
 
