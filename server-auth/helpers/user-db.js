@@ -4,10 +4,14 @@ import {
   UserEmail,
   UserPasswordReset,
 } from '../src/users/user.model.js';
-import { UserRole, Role } from '../src/auth/role.model.js';
-import { USER_ROLE } from './role-constants.js';
 import { hashPassword } from '../utils/password-utils.js';
 import { Op } from 'sequelize';
+
+const userIncludes = [
+  { model: UserProfile, as: 'UserProfile' },
+  { model: UserEmail, as: 'UserEmail' },
+  { model: UserPasswordReset, as: 'UserPasswordReset' },
+];
 
 /**
  * Helper para buscar un usuario por email o username
@@ -23,16 +27,7 @@ export const findUserByEmailOrUsername = async (emailOrUsername) => {
           { Username: emailOrUsername.toLowerCase() },
         ],
       },
-      include: [
-        { model: UserProfile, as: 'UserProfile' },
-        { model: UserEmail, as: 'UserEmail' },
-        { model: UserPasswordReset, as: 'UserPasswordReset' },
-        {
-          model: UserRole,
-          as: 'UserRoles',
-          include: [{ model: Role, as: 'Role' }],
-        },
-      ],
+      include: userIncludes,
     });
 
     return user;
@@ -45,16 +40,7 @@ export const findUserByEmailOrUsername = async (emailOrUsername) => {
 export const findUserById = async (userId) => {
   try {
     const user = await User.findByPk(userId, {
-      include: [
-        { model: UserProfile, as: 'UserProfile' },
-        { model: UserEmail, as: 'UserEmail' },
-        { model: UserPasswordReset, as: 'UserPasswordReset' },
-        {
-          model: UserRole,
-          as: 'UserRoles',
-          include: [{ model: Role, as: 'Role' }],
-        },
-      ],
+      include: userIncludes,
     });
 
     return user;
@@ -135,25 +121,6 @@ export const createNewUser = async (userData) => {
       },
       { transaction }
     );
-
-    // Asignar rol Coordinador por defecto (matching .NET DataSeeder)
-    const userRole = await Role.findOne(
-      { where: { Name: USER_ROLE } },
-      { transaction }
-    );
-    if (userRole) {
-      await UserRole.create(
-        {
-          UserId: user.Id,
-          RoleId: userRole.Id,
-        },
-        { transaction }
-      );
-    } else {
-      console.warn(
-        `Coordinador role not found in database during user creation for user ${user.Id}`
-      );
-    }
 
     await transaction.commit();
 
@@ -241,16 +208,7 @@ export const findUserByEmail = async (email) => {
   try {
     const user = await User.findOne({
       where: { Email: email.toLowerCase() },
-      include: [
-        { model: UserProfile, as: 'UserProfile' },
-        { model: UserEmail, as: 'UserEmail' },
-        { model: UserPasswordReset, as: 'UserPasswordReset' },
-        {
-          model: UserRole,
-          as: 'UserRoles',
-          include: [{ model: Role, as: 'Role' }],
-        },
-      ],
+      include: userIncludes,
     });
 
     return user;

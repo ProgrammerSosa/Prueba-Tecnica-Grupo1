@@ -1,6 +1,4 @@
 import { User, UserProfile, UserEmail } from '../src/users/user.model.js';
-import { Role, UserRole } from '../src/auth/role.model.js';
-import { ADMIN_ROLE } from './role-constants.js';
 import { hashPassword } from '../utils/password-utils.js';
 
 export const seedAdmin = async () => {
@@ -9,15 +7,9 @@ export const seedAdmin = async () => {
     const adminPassword = 'admin123';
 
     const existingAdmin = await User.findOne({ where: { Email: adminEmail } });
-    
-    if (existingAdmin) {
-      console.log('PostgreSQL | Administrador por defecto ya existe.');
-      return;
-    }
 
-    const adminRole = await Role.findOne({ where: { Name: ADMIN_ROLE } });
-    if (!adminRole) {
-      console.error('PostgreSQL | El rol Administrador no existe. Asegúrate de ejecutar seedRoles primero.');
+    if (existingAdmin) {
+      console.log('PostgreSQL | Usuario por defecto ya existe.');
       return;
     }
 
@@ -29,13 +21,13 @@ export const seedAdmin = async () => {
       Username: 'admin',
       Email: adminEmail,
       Password: hashedPassword,
-      Status: true, 
+      Status: true,
     });
 
     await UserProfile.create({
       UserId: adminUser.Id,
-      Phone: '12345678', 
-      ProfilePicture: 'default.jpg'
+      Phone: '12345678',
+      ProfilePicture: 'default.jpg',
     });
 
     await UserEmail.create({
@@ -43,13 +35,8 @@ export const seedAdmin = async () => {
       EmailVerified: true,
     });
 
-    await UserRole.create({
-      UserId: adminUser.Id,
-      RoleId: adminRole.Id,
-    });
-
-    console.log('PostgreSQL | Administrador por defecto creado exitosamente.');
+    console.log('PostgreSQL | Usuario por defecto creado exitosamente.');
   } catch (error) {
-    console.error('Error al crear el administrador:', error.message);
+    console.error('Error al crear el usuario por defecto:', error.message);
   }
 };

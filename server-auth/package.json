@@ -24,6 +24,7 @@
   "author": "Braulio Echeverria",
   "license": "MIT",
   "dependencies": {
+    "argon": "^2.0.21",
     "argon2": "^0.44.0",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
