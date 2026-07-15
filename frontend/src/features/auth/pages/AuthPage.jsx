@@ -1,12 +1,22 @@
-import { useState } from 'react';
-import { useAuthStore } from '../store/useAuthStore';
-import { LoginForm } from '../components/LoginForm';
-import { RegisterForm } from '../components/RegisterForm';
-import { ForgotPassword } from '../components/ForgotPassword';
+import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useAuthStore } from "../store/useAuthStore";
+import { AuthShell } from "../components/AuthShell";
+import { AuthAlert } from "../components/AuthAlert";
+import { LoginForm } from "../components/LoginForm";
+import { RegisterForm } from "../components/RegisterForm";
+import { ForgotPassword } from "../components/ForgotPassword";
+
+const viewCopy = {
+  login: "Entra a la colmena",
+  register: "Únete al enjambre",
+  forgot: "Recupera tu acceso al panal",
+};
 
 export const AuthPage = () => {
   const authError = useAuthStore((state) => state.error);
-  const [currentView, setCurrentView] = useState('login');
+  const [currentView, setCurrentView] = useState("login");
+  const prefersReducedMotion = useReducedMotion();
 
   const handleSwitchView = (view) => {
     useAuthStore.getState().clearError();
@@ -14,27 +24,35 @@ export const AuthPage = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#1a1a2e', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ background: '#16213e', padding: '2rem', borderRadius: '8px', width: '100%', maxWidth: '400px', color: '#fff' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Prueba Grupo #1</h1>
-          <p style={{ color: '#aaa', fontSize: '0.875rem' }}>Sistema de autenticación</p>
-        </div>
+    <AuthShell subtitle="Inventario que trabaja como colmena">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentView}
+          initial={prefersReducedMotion ? false : { opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, x: -16 }}
+          transition={{ duration: 0.25 }}
+        >
+          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-pollen">
+            Acceso InvenTech
+          </p>
+          <h2 className="mb-5 font-display text-2xl font-bold text-cacao-ink md:text-3xl">
+            {viewCopy[currentView]}
+          </h2>
 
-        {authError && (
-          <div style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff6b6b', padding: '0.75rem', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center' }}>
-            {authError}
-          </div>
-        )}
+          {authError && currentView !== "forgot" && currentView !== "register" && (
+            <AuthAlert>{authError}</AuthAlert>
+          )}
 
-        {currentView === 'login' ? (
-          <LoginForm onSwitchView={handleSwitchView} />
-        ) : currentView === 'register' ? (
-          <RegisterForm onSwitchView={handleSwitchView} />
-        ) : (
-          <ForgotPassword onSwitchView={handleSwitchView} />
-        )}
-      </div>
-    </div>
+          {currentView === "login" ? (
+            <LoginForm onSwitchView={handleSwitchView} />
+          ) : currentView === "register" ? (
+            <RegisterForm onSwitchView={handleSwitchView} />
+          ) : (
+            <ForgotPassword onSwitchView={handleSwitchView} />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </AuthShell>
   );
 };

@@ -1,19 +1,25 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import { AuthShell } from "../components/AuthShell";
+import { BeeIcon } from "../components/icons/BeeIcon";
 
 export const UnauthorizedPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#1a1a2e', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ background: '#16213e', padding: '2rem', borderRadius: '8px', width: '100%', maxWidth: '400px', color: '#fff', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '4rem', fontWeight: 'bold', color: '#e63946', marginBottom: '0.5rem' }}>403</h1>
-        <h2 style={{ marginBottom: '1rem' }}>Acceso Denegado</h2>
-        <p style={{ color: '#aaa', marginBottom: '1.5rem' }}>No tienes permisos para acceder a este recurso.</p>
-        <button onClick={() => navigate('/')}
-          style={{ padding: '0.75rem 2rem', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
+    <AuthShell subtitle="Este panal está reservado">
+      <div className="text-center">
+        <BeeIcon className="mx-auto mb-3 h-12 w-12 text-danger" animate={false} />
+        <p className="font-display text-5xl font-extrabold text-danger">403</p>
+        <h2 className="mt-2 font-display text-2xl font-bold text-cacao-ink">
+          Acceso denegado
+        </h2>
+        <p className="mb-6 mt-2 text-sm text-honeycomb">
+          No tienes permiso para entrar a este sector del panal.
+        </p>
+        <button onClick={() => navigate("/")} className="auth-btn-primary">
           Volver al inicio
         </button>
       </div>
-    </div>
+    </AuthShell>
   );
 };
