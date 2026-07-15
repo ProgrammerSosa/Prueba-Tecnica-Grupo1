@@ -26,9 +26,9 @@ export const validateCreateProduct = [
             return true;
         }),
     body('price')
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage('El precio debe ser un número mayor o igual a 0'),
+        .notEmpty()
+        .isFloat({ min: 0.1 })
+        .withMessage('El precio debe ser un número mayor a 0'),
     body('existences')
         .optional()
         .isInt({ min: 0 })

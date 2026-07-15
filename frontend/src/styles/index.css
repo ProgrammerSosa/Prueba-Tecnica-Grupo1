@@ -1,11 +1,137 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@import "tailwindcss";
+
+@theme {
+  --color-cacao-ink: #33241d;
+  --color-honeycomb: #4a3428;
+  --color-cream-comb: #efe7da;
+  --color-honey-nectar: #f9b825;
+  --color-sky-trace: #82cffd;
+  --color-pollen: #a78a50;
+  --color-danger: #c45c4a;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f5f5f5;
-  color: #333;
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-cacao-ink font-sans text-cream-comb;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-sky-trace;
+  }
+}
+
+@layer utilities {
+  .text-brand-shadow {
+    text-shadow:
+      2px 2px 0 color-mix(in srgb, var(--color-cacao-ink) 55%, transparent),
+      4px 4px 0 color-mix(in srgb, var(--color-honey-nectar) 25%, transparent);
+  }
+
+  .auth-label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-pollen;
+  }
+
+  .auth-input {
+    @apply w-full rounded-lg border border-pollen/40 bg-cacao-ink px-3 py-3 text-sm text-cream-comb
+      placeholder:text-cream-comb/40 transition
+      focus:border-honey-nectar focus:outline-none;
+  }
+
+  .auth-btn-primary {
+    @apply w-full rounded-full bg-honey-nectar px-4 py-3 text-sm font-bold uppercase tracking-[0.12em]
+      text-cacao-ink shadow-md transition hover:brightness-110
+      disabled:cursor-not-allowed disabled:opacity-70;
+  }
+
+  .auth-btn-secondary {
+    @apply rounded-full border border-pollen/60 bg-transparent px-4 py-3 text-sm font-semibold uppercase
+      tracking-[0.1em] text-cacao-ink transition hover:border-honeycomb hover:bg-honeycomb/5;
+  }
+
+  .auth-link {
+    @apply font-semibold text-sky-trace transition hover:brightness-110;
+  }
+
+  .auth-error-box {
+    @apply rounded-lg border border-danger/40 bg-danger/15 px-3 py-2 text-center text-sm text-danger;
+  }
+
+  .auth-field-error {
+    @apply mt-1 text-xs text-danger;
+  }
+
+  .panel-card {
+    @apply rounded-xl border border-pollen/25 bg-cream-comb p-5 text-cacao-ink shadow-md;
+  }
+
+  .panel-input {
+    @apply w-full rounded-lg border border-pollen/40 bg-white px-3 py-2.5 text-sm text-cacao-ink
+      placeholder:text-honeycomb/50 transition
+      focus:border-honey-nectar focus:outline-none;
+  }
+
+  .panel-label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-honeycomb;
+  }
+
+  .panel-btn {
+    @apply inline-flex items-center justify-center rounded-full bg-honey-nectar px-4 py-2.5 text-xs font-bold
+      uppercase tracking-[0.12em] text-cacao-ink shadow-md transition hover:brightness-110
+      disabled:cursor-not-allowed disabled:opacity-70;
+  }
+
+  .panel-btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full border border-pollen/50 bg-transparent px-4 py-2.5
+      text-xs font-semibold uppercase tracking-[0.1em] text-cacao-ink transition hover:bg-honeycomb/5;
+  }
+
+  .panel-btn-danger {
+    @apply inline-flex items-center justify-center rounded-full border border-danger/40 bg-danger/10 px-3 py-2
+      text-xs font-semibold uppercase tracking-[0.08em] text-danger transition hover:bg-danger/20;
+  }
+
+  .data-table-wrap {
+    @apply overflow-x-auto rounded-xl border border-pollen/20;
+  }
+
+  .data-table {
+    @apply w-full min-w-[640px] border-collapse text-left text-sm;
+  }
+
+  .data-table thead {
+    @apply bg-honeycomb text-cream-comb;
+  }
+
+  .data-table th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em];
+  }
+
+  .data-table td {
+    @apply border-t border-pollen/15 px-4 py-3 text-cacao-ink;
+  }
+
+  .data-table tbody tr {
+    @apply bg-cream-comb transition hover:bg-honey-nectar/10;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

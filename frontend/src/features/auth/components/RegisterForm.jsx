@@ -1,22 +1,39 @@
-import { useState } from 'react';
-import { useAuthStore } from '../store/useAuthStore';
-import { useForm } from 'react-hook-form';
-import { showSuccess } from '../../../shared/utils/toast';
+import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useForm } from "react-hook-form";
+import { useAuthStore } from "../store/useAuthStore";
+import { showSuccess } from "../../../shared/utils/toast";
+import { AuthAlert } from "./AuthAlert";
+import { BeeIcon } from "./icons/BeeIcon";
+
+const stepTitles = {
+  1: "Datos del enjambre",
+  2: "Detalles del panal",
+  3: "Ya eres parte de la colmena",
+};
 
 export const RegisterForm = ({ onSwitchView }) => {
-  const error = useAuthStore(state => state.error);
+  const error = useAuthStore((state) => state.error);
   const [step, setStep] = useState(1);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [profilePic, setProfilePic] = useState(null);
+  const prefersReducedMotion = useReducedMotion();
 
-  const registerUser = useAuthStore(state => state.register);
-  const loading = useAuthStore(state => state.loading);
+  const registerUser = useAuthStore((state) => state.register);
+  const loading = useAuthStore((state) => state.loading);
   const { register, handleSubmit, trigger, formState: { errors } } = useForm({
-    shouldUnregister: false
+    shouldUnregister: false,
   });
 
   const handleStep1Submit = async () => {
-    const fieldsToValidate = ['name', 'surname', 'username', 'phone', 'email', 'password'];
+    const fieldsToValidate = [
+      "name",
+      "surname",
+      "username",
+      "phone",
+      "email",
+      "password",
+    ];
     const isValid = await trigger(fieldsToValidate);
 
     if (!isValid) {
@@ -26,7 +43,7 @@ export const RegisterForm = ({ onSwitchView }) => {
           return;
         }
       }
-      useAuthStore.getState().setError('Verifica el formato de los campos.');
+      useAuthStore.getState().setError("Verifica el formato de los campos.");
       return;
     }
     useAuthStore.getState().clearError();
@@ -35,23 +52,25 @@ export const RegisterForm = ({ onSwitchView }) => {
 
   const onSubmit = async (data) => {
     const formData = new FormData();
-    formData.append('name', data.name);
-    formData.append('surname', data.surname);
-    formData.append('username', data.username);
-    formData.append('email', data.email);
-    formData.append('phone', data.phone || '');
-    formData.append('password', data.password);
+    formData.append("name", data.name);
+    formData.append("surname", data.surname);
+    formData.append("username", data.username);
+    formData.append("email", data.email);
+    formData.append("phone", data.phone || "");
+    formData.append("password", data.password);
 
     if (profilePic) {
-      formData.append('profilePicture', profilePic);
+      formData.append("profilePicture", profilePic);
     }
 
     const res = await registerUser(formData);
     if (res.success) {
-      showSuccess('Usuario registrado exitosamente. Revisa tu email para verificar la cuenta.');
+      showSuccess("Cuenta creada. Revisa tu correo para verificarla.");
       setStep(3);
     } else {
-      useAuthStore.getState().setError(res.error || 'Error al registrar el usuario');
+      useAuthStore
+        .getState()
+        .setError(res.error || "Error al registrar el usuario");
     }
   };
 
@@ -65,99 +84,201 @@ export const RegisterForm = ({ onSwitchView }) => {
 
   return (
     <>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-        {step === 1 ? 'Paso 1: Información básica' : step === 2 ? 'Paso 2: Datos adicionales' : 'Registro completado'}
-      </h2>
-      {step < 3 && <p style={{ color: '#aaa', fontSize: '0.875rem', marginBottom: '1rem' }}>Crea tu cuenta en nuestro sistema.</p>}
-
-      {error && (
-        <div style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff6b6b', padding: '0.75rem', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center' }}>
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {step === 1 && (
-          <>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: '#aaa' }}>Nombres</label>
-              <input type="text" {...register("name", { required: "El campo 'Nombres' es obligatorio.", maxLength: { value: 25, message: "Máximo 25 caracteres" } })}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #333', background: '#1a1a2e', color: '#fff' }} placeholder="Nombres" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: '#aaa' }}>Apellidos</label>
-              <input type="text" {...register("surname", { required: "El campo 'Apellidos' es obligatorio.", maxLength: { value: 25, message: "Máximo 25 caracteres" } })}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #333', background: '#1a1a2e', color: '#fff' }} placeholder="Apellidos" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: '#aaa' }}>Usuario</label>
-              <input type="text" {...register("username", { required: "El campo 'Usuario' es obligatorio." })}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #333', background: '#1a1a2e', color: '#fff' }} placeholder="@usuario" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: '#aaa' }}>Teléfono</label>
-              <input type="tel" {...register("phone", { maxLength: { value: 8, message: "Máximo 8 dígitos" } })}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #333', background: '#1a1a2e', color: '#fff' }} placeholder="12345678" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: '#aaa' }}>Correo Electrónico</label>
-              <input type="email" {...register("email", { required: "El campo 'Correo' es obligatorio.", pattern: { value: /^\S+@\S+\.\S+$/, message: "Formato inválido" } })}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #333', background: '#1a1a2e', color: '#fff' }} placeholder="correo@ejemplo.com" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: '#aaa' }}>Contraseña</label>
-              <input type="password" {...register("password", { required: "El campo 'Contraseña' es obligatorio.", minLength: { value: 8, message: "Mínimo 8 caracteres" } })}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #333', background: '#1a1a2e', color: '#fff' }} placeholder="••••••••" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: '#aaa' }}>Foto de perfil (Opcional)</label>
-              <input type="file" accept="image/*" onChange={handleImageChange}
-                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #333', background: '#1a1a2e', color: '#fff' }} />
-            </div>
-            <button type="button" onClick={handleStep1Submit}
-              style={{ width: '100%', padding: '0.75rem', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
-              Siguiente
-            </button>
-          </>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="font-display text-lg font-bold text-cacao-ink">
+          {stepTitles[step]}
+        </h3>
+        {step < 3 && (
+          <span className="rounded-full bg-honey-nectar/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-cacao-ink">
+            Paso {step} de 2
+          </span>
         )}
+      </div>
 
-        {step === 2 && (
-          <>
-            <p style={{ color: '#aaa', fontSize: '0.875rem' }}>Datos adicionales (opcional). Puedes completarlos después.</p>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: '#aaa' }}>Dirección</label>
-              <input type="text" {...register("address")}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #333', background: '#1a1a2e', color: '#fff' }} placeholder="Tu dirección" />
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button type="button" onClick={() => setStep(1)}
-                style={{ padding: '0.75rem 1.5rem', background: '#333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                Atrás
-              </button>
-              <button type="submit" disabled={loading}
-                style={{ flex: 1, padding: '0.75rem', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', opacity: loading ? 0.7 : 1 }}>
-                {loading ? 'Procesando...' : 'Completar Registro'}
-              </button>
-            </div>
-          </>
-        )}
+      <AuthAlert>{error}</AuthAlert>
 
-        {step === 3 && (
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <p style={{ marginBottom: '1rem' }}>¡Registro exitoso! Revisa tu correo para verificar tu cuenta.</p>
-            <button type="button" onClick={() => onSwitchView('login')}
-              style={{ padding: '0.75rem 2rem', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
-              Ir a Iniciar Sesión
-            </button>
-          </div>
-        )}
-      </form>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+          transition={{ duration: 0.22 }}
+        >
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+            {step === 1 && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="auth-label text-honeycomb">Nombres</label>
+                    <input
+                      type="text"
+                      className="auth-input"
+                      placeholder="Nombres"
+                      {...register("name", {
+                        required: "El campo 'Nombres' es obligatorio.",
+                        maxLength: { value: 25, message: "Máximo 25 caracteres" },
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <label className="auth-label text-honeycomb">Apellidos</label>
+                    <input
+                      type="text"
+                      className="auth-input"
+                      placeholder="Apellidos"
+                      {...register("surname", {
+                        required: "El campo 'Apellidos' es obligatorio.",
+                        maxLength: { value: 25, message: "Máximo 25 caracteres" },
+                      })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="auth-label text-honeycomb">Usuario</label>
+                  <input
+                    type="text"
+                    className="auth-input"
+                    placeholder="@usuario"
+                    {...register("username", {
+                      required: "El campo 'Usuario' es obligatorio.",
+                    })}
+                  />
+                </div>
+
+                <div>
+                  <label className="auth-label text-honeycomb">Teléfono</label>
+                  <input
+                    type="tel"
+                    className="auth-input"
+                    placeholder="12345678"
+                    {...register("phone", {
+                      maxLength: { value: 8, message: "Máximo 8 dígitos" },
+                    })}
+                  />
+                </div>
+
+                <div>
+                  <label className="auth-label text-honeycomb">Correo electrónico</label>
+                  <input
+                    type="email"
+                    className="auth-input"
+                    placeholder="correo@ejemplo.com"
+                    {...register("email", {
+                      required: "El campo 'Correo' es obligatorio.",
+                      pattern: {
+                        value: /^\S+@\S+\.\S+$/,
+                        message: "Formato inválido",
+                      },
+                    })}
+                  />
+                </div>
+
+                <div>
+                  <label className="auth-label text-honeycomb">Contraseña</label>
+                  <input
+                    type="password"
+                    className="auth-input"
+                    placeholder="••••••••"
+                    {...register("password", {
+                      required: "El campo 'Contraseña' es obligatorio.",
+                      minLength: { value: 8, message: "Mínimo 8 caracteres" },
+                    })}
+                  />
+                </div>
+
+                <div>
+                  <label className="auth-label text-honeycomb">
+                    Foto de perfil (opcional)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="auth-input file:mr-3 file:rounded-md file:border-0 file:bg-honey-nectar file:px-3 file:py-1 file:text-xs file:font-bold file:text-cacao-ink"
+                  />
+                  {previewUrl && (
+                    <img
+                      src={previewUrl}
+                      alt="Vista previa del perfil"
+                      className="mt-3 h-16 w-16 rounded-full border-2 border-honey-nectar object-cover"
+                    />
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleStep1Submit}
+                  className="auth-btn-primary mt-1"
+                >
+                  Siguiente vuelo
+                </button>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <p className="text-sm text-honeycomb">
+                  Datos adicionales opcionales. Puedes completarlos después.
+                </p>
+                <div>
+                  <label className="auth-label text-honeycomb">Dirección</label>
+                  <input
+                    type="text"
+                    className="auth-input"
+                    placeholder="Tu dirección"
+                    {...register("address")}
+                  />
+                </div>
+                <div className="mt-1 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="auth-btn-secondary"
+                  >
+                    Atrás
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="auth-btn-primary flex-1"
+                  >
+                    {loading ? "Registrando..." : "Completar registro"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {step === 3 && (
+              <div className="flex flex-col items-center py-4 text-center">
+                <BeeIcon className="mb-3 h-12 w-12 text-honey-nectar" />
+                <p className="mb-4 text-sm text-honeycomb">
+                  Registro exitoso. Revisa tu correo para confirmar tu lugar en la
+                  colmena.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onSwitchView("login")}
+                  className="auth-btn-primary max-w-xs"
+                >
+                  Ir a entrar
+                </button>
+              </div>
+            )}
+          </form>
+        </motion.div>
+      </AnimatePresence>
 
       {step < 3 && (
-        <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem', color: '#aaa' }}>
-          ¿Ya tienes cuenta?{' '}
-          <button type="button" onClick={() => onSwitchView('login')} style={{ background: 'none', border: 'none', color: '#4F46E5', cursor: 'pointer', fontWeight: 'bold' }}>
-            Iniciar sesión
+        <p className="mt-5 text-center text-sm text-honeycomb">
+          ¿Ya formas parte del enjambre?{" "}
+          <button
+            type="button"
+            onClick={() => onSwitchView("login")}
+            className="auth-link"
+          >
+            Entra
           </button>
         </p>
       )}
