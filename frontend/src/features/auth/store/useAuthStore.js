@@ -5,8 +5,25 @@ import {
     register as registerRequest,
     forgotPassword as forgotPasswordRequest,
     verifyEmail as verifyEmailRequest,
-    resetPassword as resetPasswordRequest
+    resetPassword as resetPasswordRequest,
+    refreshSession as refreshSessionRequest,
 } from "../../../shared/api"
+
+const isExpired = (expiresAt, token) => {
+    if (expiresAt) {
+        const t = new Date(expiresAt).getTime();
+        if (!Number.isNaN(t)) return t <= Date.now();
+    }
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1] || ""));
+            if (payload?.exp) return payload.exp * 1000 <= Date.now();
+        } catch {
+            return false;
+        }
+    }
+    return false;
+};
 
 export const useAuthStore = create(
     persist(
@@ -20,9 +37,9 @@ export const useAuthStore = create(
             isLoadingAuth: true,
 
             checkAuth: () => {
-                const token = get().token;
+                const { token, expiresAt } = get();
 
-                if (!token) {
+                if (!token || isExpired(expiresAt, token)) {
                     set({
                         user: null,
                         token: null,
@@ -119,7 +136,8 @@ export const useAuthStore = create(
                         token: accessToken,
                         expiresAt: data.expiresAt,
                         loading: false,
-                        isAuthenticated: true
+                        isAuthenticated: Boolean(accessToken),
+                        isLoadingAuth: false,
                     })
 
                     return { success: true }
@@ -129,6 +147,37 @@ export const useAuthStore = create(
                         err.response?.data?.message || "Error de autenticación";
                     set({ error: message, loading: false })
                     return { success: false, error: message }
+                }
+            },
+
+            refreshSession: async () => {
+                const { token, isAuthenticated } = get();
+                if (!token || !isAuthenticated) {
+                    return { success: false, unsupported: false };
+                }
+
+                try {
+                    const { data } = await refreshSessionRequest();
+                    const accessToken = data.accessToken ?? data.token;
+                    if (!accessToken) {
+                        return { success: false };
+                    }
+
+                    set({
+                        token: accessToken,
+                        expiresAt: data.expiresAt,
+                        user: data.userDetails || get().user,
+                        isAuthenticated: true,
+                        isLoadingAuth: false,
+                    });
+
+                    return { success: true };
+                } catch (err) {
+                    const status = err.response?.status;
+                    if (status === 404) {
+                        return { success: false, unsupported: true };
+                    }
+                    return { success: false, error: err.response?.data?.message };
                 }
             },
 
