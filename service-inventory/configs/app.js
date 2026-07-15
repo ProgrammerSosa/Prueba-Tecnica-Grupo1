@@ -10,6 +10,7 @@ import { errorHandler } from '../middlewares/handle-errors.js';
 import productRoutes from '../src/products/product.routes.js';
 import entryRoutes from '../src/entries/entry.routes.js';
 import outputRoutes from '../src/outputs/output.routes.js';
+import historyRoutes from '../src/history/history.routes.js';
 import { seedTempProductIfEmpty } from '../src/seed/products.seed.js';
 
 const BASE_PATH = '/api/v1';
@@ -24,7 +25,6 @@ const middlewares = (app) => {
 };
 
 const routes = (app) => {
-    app.use(`${BASE_PATH}/products`, productRoutes);
 
     app.get(`${BASE_PATH}/health`, (request, response) => {
         response.status(200).json({
@@ -34,8 +34,10 @@ const routes = (app) => {
         });
     });
 
+    app.use(`${BASE_PATH}/products`, productRoutes);
     app.use(`${BASE_PATH}/entries`, entryRoutes);
     app.use(`${BASE_PATH}/outputs`, outputRoutes);
+    app.use(`${BASE_PATH}/history`, historyRoutes);
 
     app.use((req, res) => {
         res.status(404).json({
