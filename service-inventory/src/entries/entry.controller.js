@@ -23,7 +23,7 @@ export const createEntry = async (req, res) => {
 
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
-            { $inc: { stock: quantity } },
+            { $inc: { existences: quantity } },
             { new: true, runValidators: true }
         );
 

@@ -7,7 +7,16 @@ import { ResetPasswordPage } from "../../features/auth/pages/ResetPasswordPage.j
 import { DashboardPage } from "../layouts/DashboardPage.jsx"
 
 const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated, isLoadingAuth } = useAuthStore();
+
+    if (isLoadingAuth) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-cacao-ink text-cream-comb">
+                <p className="font-display text-xl">Preparando la colmena...</p>
+            </div>
+        );
+    }
+
     if (!isAuthenticated) return <Navigate to="/" replace />;
     return children;
 };

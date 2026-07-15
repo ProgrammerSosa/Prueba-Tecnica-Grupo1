@@ -2,10 +2,6 @@ import { body } from 'express-validator';
 import { checkValidators } from './checkValidators.js';
 import { validateJWT } from './validate-JWT.js';
 
-/**
- * Validadores para salidas de inventario.
- * Estructura preparada; la lógica del controlador aún es stub.
- */
 export const validateCreateOutput = [
     validateJWT,
     body('productId')
