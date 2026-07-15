@@ -7,6 +7,7 @@ import {
     verifyEmail as verifyEmailRequest,
     resetPassword as resetPasswordRequest,
     refreshSession as refreshSessionRequest,
+    updateProfilePicture as updateProfilePictureRequest,
 } from "../../../shared/api"
 
 const isExpired = (expiresAt, token) => {
@@ -178,6 +179,19 @@ export const useAuthStore = create(
                         return { success: false, unsupported: true };
                     }
                     return { success: false, error: err.response?.data?.message };
+                }
+            },
+
+            updateProfilePicture: async (formData) => {
+                try {
+                    set({ loading: true, error: null });
+                    const { data } = await updateProfilePictureRequest(formData);
+                    set({ user: { ...get().user, ...data.data }, loading: false });
+                    return { success: true };
+                } catch (err) {
+                    const message = err.response?.data?.message || "Error al actualizar la foto de perfil";
+                    set({ error: message, loading: false });
+                    return { success: false, error: message };
                 }
             },
 

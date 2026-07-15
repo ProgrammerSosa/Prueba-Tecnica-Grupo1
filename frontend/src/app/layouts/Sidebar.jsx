@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { BeeIcon } from "../../features/auth/components/icons/BeeIcon";
+import { HoneycombPattern } from "../../features/auth/components/icons/HoneycombPattern";
 import {
   IconAlert,
   IconBox,
@@ -21,18 +22,25 @@ const links = [
 ];
 
 export const Sidebar = ({ onNavigate }) => (
-  <aside className="flex h-full w-64 flex-col border-r border-pollen/20 bg-cacao-ink text-cream-comb">
-    <div className="flex items-center gap-3 border-b border-pollen/20 px-5 py-5">
-      <BeeIcon className="h-10 w-10 text-honey-nectar" animate={false} />
-      <div>
-        <p className="font-display text-xl font-bold text-brand-shadow">InvenTech</p>
+  <aside className="relative flex h-full w-64 flex-col overflow-hidden border-r border-pollen/20 bg-cacao-ink text-cream-comb">
+    <div className="pointer-events-none absolute inset-0 text-honey-nectar/5" aria-hidden="true">
+      <HoneycombPattern className="h-full w-full" />
+    </div>
+
+    <div className="relative z-10 flex items-center gap-3 overflow-hidden border-b border-pollen/20 px-5 py-5">
+      <div className="pointer-events-none absolute inset-0 text-honey-nectar/10" aria-hidden="true">
+        <HoneycombPattern className="h-full w-full" />
+      </div>
+      <BeeIcon className="relative h-10 w-10 text-honey-nectar" animate={false} />
+      <div className="relative">
+        <p className="font-display text-xl font-bold text-brand-shadow">BeeHive</p>
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-pollen">
           Colmena de control
         </p>
       </div>
     </div>
 
-    <nav className="flex flex-1 flex-col gap-1 p-3">
+    <nav className="relative z-10 flex flex-1 flex-col gap-1 p-3">
       {links.map(({ to, end, label, icon: Icon }) => (
         <NavLink
           key={to}

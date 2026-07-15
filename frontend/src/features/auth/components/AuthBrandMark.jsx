@@ -13,7 +13,7 @@ export const AuthBrandMark = ({ subtitle = "Inventario que trabaja como colmena"
     >
       <BeeIcon className="mb-3 h-14 w-14 text-honey-nectar" />
       <h1 className="font-display text-4xl font-extrabold tracking-tight text-cream-comb text-brand-shadow md:text-5xl">
-        InvenTech
+        BeeHive
       </h1>
       <p className="mt-2 max-w-xs text-xs font-semibold uppercase tracking-[0.2em] text-pollen">
         {subtitle}

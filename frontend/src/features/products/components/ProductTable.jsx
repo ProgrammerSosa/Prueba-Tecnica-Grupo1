@@ -19,11 +19,11 @@ export const ProductTable = ({ products, onEdit, onToggle, saving }) => {
         <tbody>
           {products.map((product) => (
             <tr key={product._id}>
-              <td className="font-semibold">{product.name}</td>
-              <td>{product.category}</td>
-              <td>{formatCurrency(product.price)}</td>
-              <td>{formatNumber(getProductStock(product))}</td>
-              <td>
+              <td data-label="Producto" className="font-semibold">{product.name}</td>
+              <td data-label="Categoría">{product.category}</td>
+              <td data-label="Precio">{formatCurrency(product.price)}</td>
+              <td data-label="Existencias">{formatNumber(getProductStock(product))}</td>
+              <td data-label="Estado">
                 <span
                   className={`rounded-full px-2 py-1 text-xs font-bold uppercase tracking-wide ${
                     product.isActive
@@ -34,7 +34,7 @@ export const ProductTable = ({ products, onEdit, onToggle, saving }) => {
                   {product.isActive ? "Activo" : "Inactivo"}
                 </span>
               </td>
-              <td>
+              <td data-label="Acciones">
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"

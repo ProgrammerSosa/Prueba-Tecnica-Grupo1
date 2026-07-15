@@ -36,29 +36,23 @@ export const config = {
     apiKey: process.env.CLOUDINARY_API_KEY,
     apiSecret: process.env.CLOUDINARY_API_SECRET,
     baseUrl: process.env.CLOUDINARY_BASE_URL,
-    // Expand nested env references if not supported by dotenv
-    // If CLOUDINARY_DEFAULT_AVATAR contains ${...}, build it from folder + filename
+    // CLOUDINARY_DEFAULT_AVATAR_FILENAME ya es una URL completa (o CLOUDINARY_DEFAULT_AVATAR,
+    // si se define). No debe concatenarse con folder/baseUrl como si fuera un filename simple.
     defaultAvatarPath:
-      process.env.CLOUDINARY_DEFAULT_AVATAR &&
-      !process.env.CLOUDINARY_DEFAULT_AVATAR.includes('${')
-        ? process.env.CLOUDINARY_DEFAULT_AVATAR
-        : [
-            process.env.CLOUDINARY_FOLDER,
-            process.env.CLOUDINARY_DEFAULT_AVATAR_FILENAME,
-          ]
-            .filter(Boolean)
-            .join('/'),
+      process.env.CLOUDINARY_DEFAULT_AVATAR ||
+      process.env.CLOUDINARY_DEFAULT_AVATAR_FILENAME ||
+      '',
     folder: process.env.CLOUDINARY_FOLDER,
   },
 
-  // Rate Limiting (aligned with .NET AuthPolicy and ApiPolicy)
+  // Rate Limiting
   rateLimit: {
-    // General API rate limiting (aligned with .NET ApiPolicy: 20 tokens per minute)
+    // General API rate limiting
     windowMs: 1 * 60 * 1000, // 1 minute
-    maxRequests: 20,
-    // Auth endpoints rate limiting (aligned with .NET AuthPolicy: 5 requests per minute)
+    maxRequests: 60,
+    // Auth endpoints rate limiting (login, registro, etc.)
     authWindowMs: 1 * 60 * 1000, // 1 minute
-    authMaxRequests: 5,
+    authMaxRequests: 20,
     // Email endpoints rate limiting (more restrictive for security)
     emailWindowMs: 15 * 60 * 1000, // 15 minutes
     emailMaxRequests: 3,

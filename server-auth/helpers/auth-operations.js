@@ -1,8 +1,8 @@
-import crypto from 'crypto';
 import {
   checkUserExists,
   createNewUser,
   findUserByEmailOrUsername,
+  findUserById,
   updateEmailVerificationToken,
   markEmailAsVerified,
   findUserByEmail,
@@ -19,8 +19,7 @@ import { verifyPassword } from '../utils/password-utils.js';
 import { buildUserResponse } from '../utils/user-helpers.js';
 import { sendVerificationEmail } from './email-service.js';
 import { generateJWT } from './generate-jwt.js';
-import path from 'path';
-import { uploadImage } from './cloudinary-service.js';
+import { uploadLocalFileToCloudinary } from './cloudinary-service.js';
 import { config } from '../configs/config.js';
 
 const getExpirationTime = (timeString) => {
@@ -64,23 +63,10 @@ export const registerUserHelper = async (userData) => {
         profilePicture.startsWith('./');
 
       if (isLocalFile) {
-        try {
-          // Generar nombre como .NET: profile-<12chars>.jpg
-          const ext = path.extname(profilePicture);
-          const randomHex = crypto.randomBytes(6).toString('hex');
-          const cloudinaryFileName = `profile-${randomHex}${ext}`;
-
-          profilePictureToStore = await uploadImage(
-            profilePicture,
-            cloudinaryFileName
-          );
-        } catch (err) {
-          console.error(
-            'Error uploading profile picture to Cloudinary during registration:',
-            err
-          );
-          profilePictureToStore = null;
-        }
+        profilePictureToStore = await uploadLocalFileToCloudinary(
+          profilePicture,
+          'profile'
+        );
       } else {
         // Si viene una URL/ruta de Cloudinary, normalizar y almacenar solo el filename
         try {
@@ -206,6 +192,40 @@ export const loginUserHelper = async (emailOrUsername, password) => {
     console.error('Error en login:', error);
     throw error;
   }
+};
+
+export const refreshSessionHelper = async (userId) => {
+  const user = await findUserById(userId);
+  if (!user) {
+    const err = new Error('Usuario no encontrado');
+    err.status = 404;
+    throw err;
+  }
+
+  if (!user.Status) {
+    const err = new Error('Tu cuenta está desactivada. Contacta al administrador.');
+    err.status = 423;
+    throw err;
+  }
+
+  const token = await generateJWT(user.Id.toString());
+  const expiresInMs = getExpirationTime(process.env.JWT_EXPIRES_IN || '30m');
+  const expiresAt = new Date(Date.now() + expiresInMs);
+
+  const fullUser = buildUserResponse(user);
+  const userDetails = {
+    id: fullUser.id,
+    username: fullUser.username,
+    profilePicture: fullUser.profilePicture,
+  };
+
+  return {
+    success: true,
+    message: 'Sesión renovada exitosamente',
+    token,
+    userDetails,
+    expiresAt,
+  };
 };
 
 export const verifyEmailHelper = async (token) => {

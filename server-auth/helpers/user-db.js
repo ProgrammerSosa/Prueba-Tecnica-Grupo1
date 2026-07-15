@@ -46,7 +46,9 @@ export const findUserById = async (userId) => {
     return user;
   } catch (error) {
     console.error('Error buscando usuario por ID:', error);
-    throw new Error('Error al buscar usuario');
+    // Preserva error.name original (SequelizeConnectionError, etc.) para que
+    // validateJWT pueda distinguir un fallo de infraestructura de un token inválido.
+    throw error;
   }
 };
 
@@ -324,5 +326,19 @@ export const updateUserPassword = async (userId, hashedPassword) => {
     await transaction.rollback();
     console.error('Error actualizando contraseña:', error);
     throw new Error('Error al actualizar contraseña');
+  }
+};
+
+export const updateProfilePicture = async (userId, profilePicture) => {
+  try {
+    await UserProfile.update(
+      { ProfilePicture: profilePicture },
+      { where: { UserId: userId } }
+    );
+
+    return await findUserById(userId);
+  } catch (error) {
+    console.error('Error actualizando foto de perfil:', error);
+    throw new Error('Error al actualizar foto de perfil');
   }
 };

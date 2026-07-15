@@ -1,5 +1,7 @@
 import Output from '../outputs/output.model.js';
 import { fetchProducts, getDefaultThreshold } from '../../helpers/inventory-service.js';
+import { streamSummaryWorkbook } from '../../helpers/xlsx-builder.js';
+import { streamSummaryPdf } from '../../helpers/pdf-builder.js';
 
 const round2 = (number) => Math.round(number * 100) / 100;
 
@@ -101,48 +103,77 @@ export const getCategoriesReport = async (req, res, next) => {
     }
 };
 
+export const getSummaryData = async (token) => {
+    const threshold = getDefaultThreshold();
+
+    const [rows, products] = await Promise.all([
+        aggregateTopProducts(5),
+        fetchProducts(token),
+    ]);
+
+    const totalStockUnits = products.reduce(
+        (sum, product) => sum + (Number(product.stock) || 0),
+        0
+    );
+    const totalInventoryValue = products.reduce(
+        (sum, product) =>
+            sum + (Number(product.price) || 0) * (Number(product.stock) || 0),
+        0
+    );
+
+    return {
+        totals: {
+            totalProducts: products.length,
+            totalStockUnits,
+            totalInventoryValue: round2(totalInventoryValue),
+        },
+        alerts: {
+            threshold,
+            lowStockCount: products.filter(
+                (product) => Number(product.stock) <= threshold
+            ).length,
+            outOfStockCount: products.filter(
+                (product) => Number(product.stock) === 0
+            ).length,
+        },
+        categories: buildCategorySummary(products),
+        topProducts: enrichTopProducts(rows, products),
+        generatedAt: new Date().toISOString(),
+    };
+};
+
 export const getSummaryReport = async (req, res, next) => {
     try {
-        const threshold = getDefaultThreshold();
-
-        const [rows, products] = await Promise.all([
-            aggregateTopProducts(5),
-            fetchProducts(req.token),
-        ]);
-
-        const totalStockUnits = products.reduce(
-            (sum, product) => sum + (Number(product.stock) || 0),
-            0
-        );
-        const totalInventoryValue = products.reduce(
-            (sum, product) =>
-                sum + (Number(product.price) || 0) * (Number(product.stock) || 0),
-            0
-        );
+        const data = await getSummaryData(req.token);
 
         res.status(200).json({
             success: true,
             message: 'Resumen general del inventario generado correctamente',
-            data: {
-                totals: {
-                    totalProducts: products.length,
-                    totalStockUnits,
-                    totalInventoryValue: round2(totalInventoryValue),
-                },
-                alerts: {
-                    threshold,
-                    lowStockCount: products.filter(
-                        (product) => Number(product.stock) <= threshold
-                    ).length,
-                    outOfStockCount: products.filter(
-                        (product) => Number(product.stock) === 0
-                    ).length,
-                },
-                categories: buildCategorySummary(products),
-                topProducts: enrichTopProducts(rows, products),
-                generatedAt: new Date().toISOString(),
-            },
+            data,
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const exportSummary = async (req, res, next) => {
+    try {
+        const format = String(req.query.format || '').toLowerCase();
+
+        if (format !== 'xlsx' && format !== 'pdf') {
+            return res.status(400).json({
+                success: false,
+                message: 'El parámetro format debe ser "xlsx" o "pdf"',
+            });
+        }
+
+        const data = await getSummaryData(req.token);
+
+        if (format === 'xlsx') {
+            await streamSummaryWorkbook(res, data);
+        } else {
+            streamSummaryPdf(res, data);
+        }
     } catch (error) {
         next(error);
     }

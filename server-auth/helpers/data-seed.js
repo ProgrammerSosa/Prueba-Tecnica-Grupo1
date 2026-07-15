@@ -27,7 +27,6 @@ export const seedAdmin = async () => {
     await UserProfile.create({
       UserId: adminUser.Id,
       Phone: '12345678',
-      ProfilePicture: 'default.jpg',
     });
 
     await UserEmail.create({

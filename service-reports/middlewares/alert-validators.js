@@ -7,5 +7,19 @@ export const lowStockValidator = [
         .isInt({ min: 0 })
         .withMessage('El threshold debe ser un número entero mayor o igual a 0')
         .toInt(),
+    query('category')
+        .optional()
+        .isString()
+        .trim()
+        .toUpperCase(),
+    checkValidators,
+];
+
+export const outOfStockValidator = [
+    query('category')
+        .optional()
+        .isString()
+        .trim()
+        .toUpperCase(),
     checkValidators,
 ];
