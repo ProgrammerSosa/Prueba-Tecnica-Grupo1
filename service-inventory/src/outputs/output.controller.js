@@ -3,6 +3,12 @@
 import Output from './output.model.js';
 import Product from '../products/product.model.js';
 import { buildPaginatedMeta, parsePagination } from '../../helpers/pagination.js';
+import { parsePositiveQuantity } from '../../helpers/quantity-rules.js';
+import {
+    InventoryMessages,
+    successResponse,
+    errorResponse,
+} from '../../helpers/inventory-messages.js';
 
 const productSelect = 'name category price existences isActive';
 
@@ -30,25 +36,23 @@ const buildOutputFilter = (query = {}) => {
 
 export const createOutput = async (req, res) => {
     try {
-        const { productId, quantity, note } = req.body;
-        const qty = Number(quantity);
+        const { productId, note } = req.body;
+        const quantityCheck = parsePositiveQuantity(req.body.quantity);
 
-        if (!Number.isFinite(qty) || qty <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad debe ser mayor a 0',
-                error: 'INVALID_QUANTITY',
-            });
+        if (!quantityCheck.valid) {
+            return errorResponse(res, 400, quantityCheck.message);
         }
+
+        const { quantity } = quantityCheck;
 
         // Descuento atómico solo si hay stock suficiente y el producto está activo
         const updatedProduct = await Product.findOneAndUpdate(
             {
                 _id: productId,
                 isActive: true,
-                existences: { $gte: qty },
+                existences: { $gte: quantity },
             },
-            { $inc: { existences: -qty } },
+            { $inc: { existences: -quantity } },
             { new: true, runValidators: true }
         );
 
@@ -56,58 +60,46 @@ export const createOutput = async (req, res) => {
             const product = await Product.findById(productId);
 
             if (!product) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Producto no encontrado',
+                return errorResponse(res, 404, InventoryMessages.PRODUCT_NOT_FOUND, {
                     error: 'PRODUCT_NOT_FOUND',
                 });
             }
 
             if (!product.isActive) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'No se pueden registrar salidas para un producto inactivo',
+                return errorResponse(res, 400, InventoryMessages.OUTPUT_INACTIVE_PRODUCT, {
                     error: 'PRODUCT_INACTIVE',
                 });
             }
 
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad de salida no puede ser mayor a la existencia del producto',
+            return errorResponse(res, 400, InventoryMessages.OUTPUT_INSUFFICIENT_STOCK, {
                 error: 'INSUFFICIENT_STOCK',
                 available: product.existences,
-                requested: qty,
+                requested: quantity,
             });
         }
 
         try {
             const output = await Output.create({
                 productId,
-                quantity: qty,
+                quantity,
                 note: note || '',
                 createdBy: req.account?.id || null,
             });
 
-            return res.status(201).json({
-                success: true,
-                message: 'Salida registrada exitosamente',
-                data: {
-                    output,
-                    product: updatedProduct,
-                },
+            return successResponse(res, 201, InventoryMessages.OUTPUT_SUCCESS, {
+                output,
+                product: updatedProduct,
             });
         } catch (saveError) {
             // Compensación: devolver stock si falla el registro del movimiento
             await Product.findByIdAndUpdate(productId, {
-                $inc: { existences: qty },
+                $inc: { existences: quantity },
             });
             throw saveError;
         }
     } catch (error) {
         console.error('Error al registrar salida:', error.message);
-        return res.status(400).json({
-            success: false,
-            message: 'Error al registrar la salida',
+        return errorResponse(res, 400, InventoryMessages.OUTPUT_ERROR, {
             error: error.message,
         });
     }

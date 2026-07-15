@@ -117,10 +117,6 @@ export const getProducts = async (req, res) => {
     }
 };
 
-/**
- * Listar productos por nombre y/o categoría
- * GET /api/v1/products/search?name=...&category=...
- */
 export const getProductsByNameOrCategory = async (req, res) => {
     try {
         const { name, category, isActive } = req.query;

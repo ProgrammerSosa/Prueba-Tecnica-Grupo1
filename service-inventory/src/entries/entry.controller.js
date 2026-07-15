@@ -3,6 +3,12 @@
 import Entry from './entry.model.js';
 import Product from '../products/product.model.js';
 import { buildPaginatedMeta, parsePagination } from '../../helpers/pagination.js';
+import { parsePositiveQuantity } from '../../helpers/quantity-rules.js';
+import {
+    InventoryMessages,
+    successResponse,
+    errorResponse,
+} from '../../helpers/inventory-messages.js';
 
 const productSelect = 'name category price existences isActive';
 
@@ -30,21 +36,19 @@ const buildEntryFilter = (query = {}) => {
 
 export const createEntry = async (req, res) => {
     try {
-        const { productId, quantity, note } = req.body;
-        const qty = Number(quantity);
+        const { productId, note } = req.body;
+        const quantityCheck = parsePositiveQuantity(req.body.quantity);
 
-        if (!Number.isFinite(qty) || qty <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'La cantidad debe ser mayor a 0',
-                error: 'INVALID_QUANTITY',
-            });
+        if (!quantityCheck.valid) {
+            return errorResponse(res, 400, quantityCheck.message);
         }
+
+        const { quantity } = quantityCheck;
 
         // Actualización atómica: evita condiciones de carrera y verifica producto activo
         const updatedProduct = await Product.findOneAndUpdate(
             { _id: productId, isActive: true },
-            { $inc: { existences: qty } },
+            { $inc: { existences: quantity } },
             { new: true, runValidators: true }
         );
 
@@ -52,16 +56,12 @@ export const createEntry = async (req, res) => {
             const product = await Product.findById(productId);
 
             if (!product) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Producto no encontrado',
+                return errorResponse(res, 404, InventoryMessages.PRODUCT_NOT_FOUND, {
                     error: 'PRODUCT_NOT_FOUND',
                 });
             }
 
-            return res.status(400).json({
-                success: false,
-                message: 'No se pueden registrar entradas para un producto inactivo',
+            return errorResponse(res, 400, InventoryMessages.ENTRY_INACTIVE_PRODUCT, {
                 error: 'PRODUCT_INACTIVE',
             });
         }
@@ -69,31 +69,25 @@ export const createEntry = async (req, res) => {
         try {
             const entry = await Entry.create({
                 productId,
-                quantity: qty,
+                quantity,
                 note: note || '',
                 createdBy: req.account?.id || null,
             });
 
-            return res.status(201).json({
-                success: true,
-                message: 'Entrada registrada exitosamente',
-                data: {
-                    entry,
-                    product: updatedProduct,
-                },
+            return successResponse(res, 201, InventoryMessages.ENTRY_SUCCESS, {
+                entry,
+                product: updatedProduct,
             });
         } catch (saveError) {
             // Compensación si falla el registro del movimiento
             await Product.findByIdAndUpdate(productId, {
-                $inc: { existences: -qty },
+                $inc: { existences: -quantity },
             });
             throw saveError;
         }
     } catch (error) {
         console.error('Error al registrar entrada:', error.message);
-        return res.status(400).json({
-            success: false,
-            message: 'Error al registrar la entrada',
+        return errorResponse(res, 400, InventoryMessages.ENTRY_ERROR, {
             error: error.message,
         });
     }

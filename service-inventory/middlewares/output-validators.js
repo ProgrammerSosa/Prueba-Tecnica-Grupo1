@@ -3,13 +3,7 @@
 import { body, param, query } from 'express-validator';
 import { checkValidators } from './checkValidators.js';
 import { validateJWT } from './validate-JWT.js';
-
-const validatePositiveQuantity = body('quantity')
-    .notEmpty()
-    .withMessage('La cantidad es obligatoria')
-    .isInt({ min: 1 })
-    .withMessage('La cantidad debe ser un entero mayor a 0')
-    .toInt();
+import { quantityBodyValidator } from '../helpers/quantity-rules.js';
 
 const listFilters = [
     query('productId')
@@ -45,7 +39,7 @@ export const validateCreateOutput = [
         .withMessage('El ID del producto es obligatorio')
         .isMongoId()
         .withMessage('El ID del producto no es válido'),
-    validatePositiveQuantity,
+    quantityBodyValidator,
     body('note')
         .optional()
         .isString()
