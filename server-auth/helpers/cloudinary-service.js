@@ -73,26 +73,39 @@ export const deleteImage = async (imagePath) => {
   }
 };
 
+const extractAbsoluteUrl = (value = '') => {
+  const match = String(value).match(/https?:\/\/\S+/i);
+  return match ? match[0] : null;
+};
+
 export const getFullImageUrl = (imagePath) => {
-  if (!imagePath) {
-    return getDefaultAvatarUrl();
+  const baseUrl = config.cloudinary.baseUrl || '';
+  const folder = config.cloudinary.folder || '';
+  const defaultPath = config.cloudinary.defaultAvatarPath || '';
+
+  // Sin path: devolver avatar por defecto sin recursión
+  const resolved = imagePath || defaultPath;
+  if (!resolved) {
+    return baseUrl;
   }
 
-  const baseUrl = config.cloudinary.baseUrl;
-  const folder = config.cloudinary.folder;
+  // Si ya es (o contiene) una URL absoluta, usarla tal cual
+  const absoluteUrl = extractAbsoluteUrl(resolved);
+  if (absoluteUrl) {
+    return absoluteUrl;
+  }
 
-  const pathToUse = !imagePath
-    ? config.cloudinary.defaultAvatarPath
-    : imagePath.includes('/')
-      ? imagePath
-      : `${folder}/${imagePath}`;
+  const pathToUse = resolved.includes('/')
+    ? resolved
+    : folder
+      ? `${folder}/${resolved}`
+      : resolved;
 
   return `${baseUrl}${pathToUse}`;
 };
 
 export const getDefaultAvatarUrl = () => {
-  const defaultPath = config.cloudinary.defaultAvatarPath;
-  return getFullImageUrl(defaultPath);
+  return getFullImageUrl(config.cloudinary.defaultAvatarPath || '');
 };
 
 export const getDefaultAvatarPath = () => {

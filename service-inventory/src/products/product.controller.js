@@ -24,7 +24,7 @@ export const createProduct = async (req, res) => {
 
         const existingProduct = await Product.findOne({ name: name.trim() });
         if (existingProduct) {
-            return res.status(400).json({
+            return res.status(409).json({
                 success: false,
                 message: 'Ya existe un producto con ese nombre',
                 error: 'DUPLICATE_NAME',
@@ -47,6 +47,20 @@ export const createProduct = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al crear producto:', error.message);
+        if (error.name === 'ValidationError' || error.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Datos de producto inválidos',
+                error: error.name,
+            });
+        }
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: 'Ya existe un producto con ese nombre',
+                error: 'DUPLICATE_NAME',
+            });
+        }
         return res.status(500).json({
             success: false,
             message: 'Error al crear el producto',
@@ -141,6 +155,13 @@ export const getProductById = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al obtener producto:', error.message);
+        if (error.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Formato de ID inválido',
+                error: 'INVALID_ID',
+            });
+        }
         return res.status(500).json({
             success: false,
             message: 'Error al obtener el producto',
@@ -171,7 +192,7 @@ export const updateProduct = async (req, res) => {
             });
 
             if (existingProduct) {
-                return res.status(400).json({
+                return res.status(409).json({
                     success: false,
                     message: 'Ya existe un producto con ese nombre',
                     error: 'DUPLICATE_NAME',
@@ -208,6 +229,20 @@ export const updateProduct = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al actualizar producto:', error.message);
+        if (error.name === 'ValidationError' || error.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Datos de producto inválidos',
+                error: error.name,
+            });
+        }
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: 'Ya existe un producto con ese nombre',
+                error: 'DUPLICATE_NAME',
+            });
+        }
         return res.status(500).json({
             success: false,
             message: 'Error al actualizar el producto',

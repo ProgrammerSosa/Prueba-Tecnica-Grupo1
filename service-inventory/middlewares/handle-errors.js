@@ -18,7 +18,7 @@ export const errorHandler = (err, req, res, next) => {
 
     if (err.code === 11000) {
         const field = Object.keys(err.keyValue)[0];
-        return res.status(400).json({
+        return res.status(409).json({
             success: false,
             message: `${field} ya existe`,
             error: 'DUPLICATE_FIELD',

@@ -55,6 +55,8 @@ export const login = asyncHandler(async (req, res) => {
       error.message.includes('desactivada')
     ) {
       statusCode = 423; // Locked
+    } else if (error.message.includes('verificar tu email')) {
+      statusCode = 403; // Forbidden hasta verificar email
     }
 
     res.status(statusCode).json({

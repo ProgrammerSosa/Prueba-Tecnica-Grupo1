@@ -10,6 +10,7 @@ export const buildUserResponse = (user) => {
       ? getFullImageUrl(user.UserProfile.ProfilePicture)
       : getFullImageUrl(getDefaultAvatarPath());
 
+  // Nunca incluir Password ni tokens sensibles
   return {
     id: user.Id,
     name: user.Name,

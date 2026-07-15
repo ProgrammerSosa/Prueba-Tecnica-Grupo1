@@ -32,13 +32,15 @@ export const errorHandler = (err, req, res, _next) => {
     });
   }
 
-  // Error de duplicado de Mongoose
+  // Error de duplicado (unique constraint)
   if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    const value = err.keyValue[field];
-    return res.status(400).json({
+    const field = Object.keys(err.keyValue || {})[0] || 'campo';
+    const value = err.keyValue?.[field];
+    return res.status(409).json({
       success: false,
-      message: `El ${field} '${value}' ya está en uso`,
+      message: value
+        ? `El ${field} '${value}' ya está en uso`
+        : `El ${field} ya está en uso`,
       errorCode,
       traceId,
       timestamp,

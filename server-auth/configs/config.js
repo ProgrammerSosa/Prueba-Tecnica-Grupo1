@@ -38,16 +38,18 @@ export const config = {
     baseUrl: process.env.CLOUDINARY_BASE_URL,
     // Expand nested env references if not supported by dotenv
     // If CLOUDINARY_DEFAULT_AVATAR contains ${...}, build it from folder + filename
-    defaultAvatarPath:
-      process.env.CLOUDINARY_DEFAULT_AVATAR &&
-      !process.env.CLOUDINARY_DEFAULT_AVATAR.includes('${')
-        ? process.env.CLOUDINARY_DEFAULT_AVATAR
-        : [
-            process.env.CLOUDINARY_FOLDER,
-            process.env.CLOUDINARY_DEFAULT_AVATAR_FILENAME,
-          ]
-            .filter(Boolean)
-            .join('/'),
+    defaultAvatarPath: (() => {
+      const configured = process.env.CLOUDINARY_DEFAULT_AVATAR;
+      if (configured && !configured.includes('${')) {
+        return configured;
+      }
+      const filename = process.env.CLOUDINARY_DEFAULT_AVATAR_FILENAME || '';
+      // Si el filename ya es una URL completa, no anteponer la carpeta
+      if (/^https?:\/\//i.test(filename)) {
+        return filename;
+      }
+      return [process.env.CLOUDINARY_FOLDER, filename].filter(Boolean).join('/');
+    })(),
     folder: process.env.CLOUDINARY_FOLDER,
   },
 

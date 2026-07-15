@@ -45,7 +45,14 @@ export const createEntry = async (req, res) => {
             },
         });
     } catch (error) {
-        res.status(400).json({
+        if (error.name === 'ValidationError' || error.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Datos de entrada inválidos',
+                error: error.name,
+            });
+        }
+        return res.status(500).json({
             success: false,
             message: 'Error al registrar la entrada de inventario',
             error: error.message,

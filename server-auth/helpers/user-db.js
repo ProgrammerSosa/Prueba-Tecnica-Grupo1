@@ -20,7 +20,8 @@ const userIncludes = [
  */
 export const findUserByEmailOrUsername = async (emailOrUsername) => {
   try {
-    const user = await User.findOne({
+    // unscoped: login necesita el hash; no se serializa en respuestas (toJSON/buildUserResponse)
+    const user = await User.unscoped().findOne({
       where: {
         [Op.or]: [
           { Email: emailOrUsername.toLowerCase() },

@@ -99,8 +99,19 @@ export const User = sequelize.define(
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
+    // Nunca exponer Password en consultas ni serialización JSON
+    defaultScope: {
+      attributes: { exclude: ['Password'] },
+    },
   }
 );
+
+User.prototype.toJSON = function toJSON() {
+  const values = { ...this.get() };
+  delete values.Password;
+  delete values.password;
+  return values;
+};
 
 // Modelo UserProfile (equivalente a UserProfile.cs en .NET) - usando snake_case
 export const UserProfile = sequelize.define(
