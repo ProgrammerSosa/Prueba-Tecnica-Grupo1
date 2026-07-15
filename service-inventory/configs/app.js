@@ -12,6 +12,7 @@ import entryRoutes from '../src/entries/entry.routes.js';
 import outputRoutes from '../src/outputs/output.routes.js';
 import historyRoutes from '../src/history/history.routes.js';
 import { seedTempProductIfEmpty } from '../src/seed/products.seed.js';
+import { initCategories } from '../helpers/product-categories.js';
 
 const BASE_PATH = '/api/v1';
 
@@ -25,14 +26,20 @@ const middlewares = (app) => {
 };
 
 const routes = (app) => {
-
     app.get(`${BASE_PATH}/health`, (request, response) => {
         response.status(200).json({
             status: 'Healthy',
             timestamp: new Date().toISOString(),
             service: 'Service Inventory - Gestión de Inventario',
+            version: 'sprint-3',
+            endpoints: {
+                products: `${BASE_PATH}/products`,
+                entries: `${BASE_PATH}/entries`,
+                outputs: `${BASE_PATH}/outputs`,
+            },
         });
     });
+
 
     app.use(`${BASE_PATH}/products`, productRoutes);
     app.use(`${BASE_PATH}/entries`, entryRoutes);
@@ -54,6 +61,7 @@ export const initServer = async () => {
 
     try {
         await dbConnection();
+        await initCategories();
         await seedTempProductIfEmpty();
 
         middlewares(app);

@@ -7,6 +7,35 @@ import {
     isValidCategory,
     normalizeCategory,
 } from '../../helpers/product-categories.js';
+import { buildPaginatedMeta, parsePagination } from '../../helpers/pagination.js';
+
+const buildProductFilter = (query = {}) => {
+    const filter = {};
+
+    if (query.isActive !== undefined && query.isActive !== '') {
+        filter.isActive = query.isActive === 'true' || query.isActive === true;
+    }
+
+    if (query.category) {
+        filter.category = normalizeCategory(query.category);
+    }
+
+    if (query.name) {
+        filter.name = { $regex: String(query.name).trim(), $options: 'i' };
+    }
+
+    if (query.minStock !== undefined || query.maxStock !== undefined) {
+        filter.existences = {};
+        if (query.minStock !== undefined && query.minStock !== '') {
+            filter.existences.$gte = Number(query.minStock);
+        }
+        if (query.maxStock !== undefined && query.maxStock !== '') {
+            filter.existences.$lte = Number(query.maxStock);
+        }
+    }
+
+    return filter;
+};
 
 export const createProduct = async (req, res) => {
     try {
@@ -57,11 +86,25 @@ export const createProduct = async (req, res) => {
 
 export const getProducts = async (req, res) => {
     try {
-        const products = await Product.find().sort({ createdAt: -1 });
+        const filter = buildProductFilter(req.query);
+        const { page, limit, skip, paginated } = parsePagination(req.query);
+
+        const [products, total] = await Promise.all([
+            paginated
+                ? Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit)
+                : Product.find(filter).sort({ createdAt: -1 }),
+            Product.countDocuments(filter),
+        ]);
 
         return res.status(200).json({
             success: true,
-            total: products.length,
+            total,
+            ...(paginated && { pagination: buildPaginatedMeta({ page, limit, total }) }),
+            filters: {
+                isActive: req.query.isActive ?? null,
+                category: req.query.category ? normalizeCategory(req.query.category) : null,
+                name: req.query.name || null,
+            },
             products,
         });
     } catch (error) {
@@ -74,13 +117,9 @@ export const getProducts = async (req, res) => {
     }
 };
 
-/**
- * Listar productos por nombre y/o categoría
- * GET /api/v1/products/search?name=...&category=...
- */
 export const getProductsByNameOrCategory = async (req, res) => {
     try {
-        const { name, category } = req.query;
+        const { name, category, isActive } = req.query;
 
         if (!name && !category) {
             return res.status(400).json({
@@ -90,16 +129,7 @@ export const getProductsByNameOrCategory = async (req, res) => {
             });
         }
 
-        const filter = {};
-
-        if (name) {
-            filter.name = { $regex: name.trim(), $options: 'i' };
-        }
-
-        if (category) {
-            filter.category = normalizeCategory(category);
-        }
-
+        const filter = buildProductFilter({ name, category, isActive });
         const products = await Product.find(filter).sort({ createdAt: -1 });
 
         return res.status(200).json({
@@ -108,6 +138,7 @@ export const getProductsByNameOrCategory = async (req, res) => {
             filters: {
                 name: name || null,
                 category: category ? normalizeCategory(category) : null,
+                isActive: isActive ?? null,
             },
             products,
         });
@@ -149,6 +180,97 @@ export const getProductById = async (req, res) => {
     }
 };
 
+export const getLowStockProducts = async (req, res) => {
+    try {
+        const threshold = Number(req.query.threshold);
+        const stockThreshold =
+            Number.isFinite(threshold) && threshold >= 0 ? threshold : 5;
+
+        const products = await Product.find({
+            isActive: true,
+            existences: { $lte: stockThreshold },
+        }).sort({ existences: 1, name: 1 });
+
+        return res.status(200).json({
+            success: true,
+            threshold: stockThreshold,
+            total: products.length,
+            products,
+        });
+    } catch (error) {
+        console.error('Error al obtener stock bajo:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener productos con stock bajo',
+            error: error.message,
+        });
+    }
+};
+
+export const getInventorySummary = async (req, res) => {
+    try {
+        const [summary] = await Product.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalProducts: { $sum: 1 },
+                    activeProducts: {
+                        $sum: { $cond: ['$isActive', 1, 0] },
+                    },
+                    inactiveProducts: {
+                        $sum: { $cond: ['$isActive', 0, 1] },
+                    },
+                    totalStock: { $sum: '$existences' },
+                    totalValue: {
+                        $sum: { $multiply: ['$price', '$existences'] },
+                    },
+                    outOfStock: {
+                        $sum: {
+                            $cond: [
+                                { $and: ['$isActive', { $eq: ['$existences', 0] }] },
+                                1,
+                                0,
+                            ],
+                        },
+                    },
+                },
+            },
+        ]);
+
+        const lowStockThreshold = Number(req.query.threshold);
+        const threshold =
+            Number.isFinite(lowStockThreshold) && lowStockThreshold >= 0
+                ? lowStockThreshold
+                : 5;
+
+        const lowStockCount = await Product.countDocuments({
+            isActive: true,
+            existences: { $lte: threshold, $gt: 0 },
+        });
+
+        return res.status(200).json({
+            success: true,
+            summary: {
+                totalProducts: summary?.totalProducts ?? 0,
+                activeProducts: summary?.activeProducts ?? 0,
+                inactiveProducts: summary?.inactiveProducts ?? 0,
+                totalStock: summary?.totalStock ?? 0,
+                totalValue: Math.round((summary?.totalValue ?? 0) * 100) / 100,
+                outOfStock: summary?.outOfStock ?? 0,
+                lowStock: lowStockCount,
+                lowStockThreshold: threshold,
+            },
+        });
+    } catch (error) {
+        console.error('Error al obtener resumen de inventario:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al obtener el resumen de inventario',
+            error: error.message,
+        });
+    }
+};
+
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
@@ -161,6 +283,20 @@ export const updateProduct = async (req, res) => {
                 success: false,
                 message: 'Producto no encontrado',
                 error: 'PRODUCT_NOT_FOUND',
+            });
+        }
+
+        // Las existencias solo se modifican con entradas/salidas (auditoría)
+        if (
+            existences !== undefined &&
+            Number(existences) !== Number(product.existences)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    'Las existencias solo se modifican mediante entradas o salidas de inventario',
+                error: 'STOCK_VIA_MOVEMENTS_ONLY',
+                currentStock: product.existences,
             });
         }
 
@@ -197,7 +333,6 @@ export const updateProduct = async (req, res) => {
         }
 
         if (price !== undefined) product.price = price;
-        if (existences !== undefined) product.existences = existences;
 
         await product.save();
 
@@ -316,7 +451,7 @@ export const getCategoriesList = async (req, res) => {
 export const addCategory = async (req, res) => {
     try {
         const { category } = req.body;
-        const result = addCategoryToEnum(category);
+        const result = await addCategoryToEnum(category);
 
         if (!result.success) {
             return res.status(400).json({
