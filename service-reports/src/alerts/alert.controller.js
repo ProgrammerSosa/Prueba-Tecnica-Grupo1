@@ -7,7 +7,7 @@ export const getLowStockAlert = async (req, res, next) => {
                 ? req.query.threshold
                 : getDefaultThreshold();
 
-        const products = await fetchProducts(req.token);
+        const products = await fetchProducts(req.token, { category: req.query.category });
 
         const lowStock = products
             .filter((product) => Number(product.stock) <= threshold)
@@ -38,7 +38,7 @@ export const getLowStockAlert = async (req, res, next) => {
 
 export const getOutOfStockAlert = async (req, res, next) => {
     try {
-        const products = await fetchProducts(req.token);
+        const products = await fetchProducts(req.token, { category: req.query.category });
 
         const outOfStock = products
             .filter((product) => Number(product.stock) === 0)

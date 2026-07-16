@@ -1,11 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useReportsStore } from "../store/useReportsStore";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import { StatCard } from "../../../shared/components/StatCard";
 import { LoadingBlock } from "../../../shared/components/LoadingBlock";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { formatCurrency, formatNumber } from "../../../shared/utils/inventory";
-import { showError } from "../../../shared/utils/toast";
+import { showError, showSuccess } from "../../../shared/utils/toast";
+import { exportSummaryReport } from "../../../shared/api/reports";
+import { downloadBlob } from "../../../shared/utils/downloadBlob";
 
 export const ReportsPage = () => {
   const summary = useReportsStore((s) => s.summary);
@@ -14,6 +16,7 @@ export const ReportsPage = () => {
   const loading = useReportsStore((s) => s.loading);
   const error = useReportsStore((s) => s.error);
   const fetchReports = useReportsStore((s) => s.fetchReports);
+  const [exporting, setExporting] = useState(null);
 
   useEffect(() => {
     fetchReports(10);
@@ -25,15 +28,46 @@ export const ReportsPage = () => {
 
   const totals = summary?.totals;
 
+  const handleExport = async (format) => {
+    try {
+      setExporting(format);
+      const { data } = await exportSummaryReport(format);
+      downloadBlob(data, `resumen-beehive.${format}`);
+      showSuccess("Descarga iniciada.");
+    } catch {
+      showError("No se pudo exportar el resumen.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
     <div>
       <PageHeader
         title="Reportes de la colmena"
         subtitle="Resumen general, top productos y categorías"
         actions={
-          <button type="button" className="panel-btn" onClick={() => fetchReports(10)}>
-            Actualizar reportes
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="panel-btn-ghost"
+              disabled={exporting === "xlsx"}
+              onClick={() => handleExport("xlsx")}
+            >
+              {exporting === "xlsx" ? "Exportando..." : "Exportar Excel"}
+            </button>
+            <button
+              type="button"
+              className="panel-btn-ghost"
+              disabled={exporting === "pdf"}
+              onClick={() => handleExport("pdf")}
+            >
+              {exporting === "pdf" ? "Exportando..." : "Exportar PDF"}
+            </button>
+            <button type="button" className="panel-btn" onClick={() => fetchReports(10)}>
+              Actualizar reportes
+            </button>
+          </div>
         }
       />
 
@@ -68,7 +102,7 @@ export const ReportsPage = () => {
           </div>
 
           <div className="grid gap-5 xl:grid-cols-2">
-            <section className="panel-card">
+            <section className="panel-card panel-card-hover">
               <h2 className="mb-3 font-display text-xl font-bold">
                 Top productos
               </h2>
@@ -88,10 +122,10 @@ export const ReportsPage = () => {
                     <tbody>
                       {topProducts.map((item) => (
                         <tr key={String(item._id)}>
-                          <td className="font-semibold">{item.name}</td>
-                          <td>{formatNumber(item.totalSold)}</td>
-                          <td>{formatNumber(item.salesCount)}</td>
-                          <td>{formatNumber(item.currentStock)}</td>
+                          <td data-label="Producto" className="font-semibold">{item.name}</td>
+                          <td data-label="Vendidos">{formatNumber(item.totalSold)}</td>
+                          <td data-label="Ventas">{formatNumber(item.salesCount)}</td>
+                          <td data-label="Stock">{formatNumber(item.currentStock)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -100,7 +134,7 @@ export const ReportsPage = () => {
               )}
             </section>
 
-            <section className="panel-card">
+            <section className="panel-card panel-card-hover">
               <h2 className="mb-3 font-display text-xl font-bold">
                 Por categoría
               </h2>
@@ -120,10 +154,10 @@ export const ReportsPage = () => {
                     <tbody>
                       {categories.map((item) => (
                         <tr key={item.category}>
-                          <td className="font-semibold">{item.category}</td>
-                          <td>{formatNumber(item.productCount)}</td>
-                          <td>{formatNumber(item.totalStock)}</td>
-                          <td>{formatCurrency(item.totalValue)}</td>
+                          <td data-label="Categoría" className="font-semibold">{item.category}</td>
+                          <td data-label="Productos">{formatNumber(item.productCount)}</td>
+                          <td data-label="Stock">{formatNumber(item.totalStock)}</td>
+                          <td data-label="Valor">{formatCurrency(item.totalValue)}</td>
                         </tr>
                       ))}
                     </tbody>

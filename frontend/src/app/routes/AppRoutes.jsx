@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "../../features/auth/store/useAuthStore.js";
+import { BeeSpinner } from "../../shared/components/BeeSpinner.jsx";
 import { AuthPage } from "../../features/auth/pages/AuthPage.jsx";
 import { VerifyEmailPage } from "../../features/auth/pages/VerifyEmailPage.jsx";
 import { UnauthorizedPage } from "../../features/auth/pages/UnauthorizedPage.jsx";
@@ -19,7 +20,7 @@ const ProtectedRoute = ({ children }) => {
   if (isLoadingAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-cacao-ink text-cream-comb">
-        <p className="font-display text-xl">Preparando la colmena...</p>
+        <BeeSpinner size="lg" label="Preparando la colmena..." />
       </div>
     );
   }

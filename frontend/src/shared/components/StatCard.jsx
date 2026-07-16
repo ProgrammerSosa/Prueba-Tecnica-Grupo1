@@ -9,8 +9,8 @@ export const StatCard = ({ label, value, hint, tone = "default" }) => {
           : "border-pollen/25";
 
   return (
-    <div className={`panel-card border ${toneClass}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-pollen">
+    <div className={`panel-card panel-card-hover border ${toneClass}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-honeycomb">
         {label}
       </p>
       <p className="mt-2 font-display text-3xl font-bold text-cacao-ink">{value}</p>

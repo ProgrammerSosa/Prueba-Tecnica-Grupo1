@@ -5,7 +5,7 @@ export const PageHeader = ({ title, subtitle, actions }) => (
         {title}
       </h1>
       {subtitle && (
-        <p className="mt-1 text-sm font-medium uppercase tracking-[0.14em] text-pollen">
+        <p className="mt-1 text-sm font-medium uppercase tracking-[0.14em] text-honeycomb">
           {subtitle}
         </p>
       )}

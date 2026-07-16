@@ -4,6 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { showSuccess } from "../../../shared/utils/toast";
 import { AuthShell } from "../components/AuthShell";
 import { AuthAlert } from "../components/AuthAlert";
+import { AuthSubmitButton } from "../components/AuthSubmitButton";
 
 export const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ export const ResetPasswordPage = () => {
         <AuthAlert>{error}</AuthAlert>
 
         <div>
-          <label className="auth-label text-honeycomb" htmlFor="newPassword">
+          <label className="auth-label" htmlFor="newPassword">
             Nueva contraseña
           </label>
           <input
@@ -75,7 +76,7 @@ export const ResetPasswordPage = () => {
         </div>
 
         <div>
-          <label className="auth-label text-honeycomb" htmlFor="confirmPassword">
+          <label className="auth-label" htmlFor="confirmPassword">
             Confirmar contraseña
           </label>
           <input
@@ -107,13 +108,9 @@ export const ResetPasswordPage = () => {
           >
             Cancelar
           </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="auth-btn-primary flex-1"
-          >
-            {loading ? "Guardando..." : "Actualizar clave"}
-          </button>
+          <AuthSubmitButton loading={loading} loadingLabel="Guardando..." className="flex-1">
+            Actualizar clave
+          </AuthSubmitButton>
         </div>
       </form>
     </AuthShell>

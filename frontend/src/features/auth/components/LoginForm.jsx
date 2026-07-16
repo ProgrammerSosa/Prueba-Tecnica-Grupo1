@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useAuthStore } from "../store/useAuthStore";
 import { showSuccess } from "../../../shared/utils/toast";
+import { AuthSubmitButton } from "./AuthSubmitButton";
 
 export const LoginForm = ({ onSwitchView }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +31,7 @@ export const LoginForm = ({ onSwitchView }) => {
     <>
       <form onSubmit={handleSubmit(onSubmit, onError)} className="flex flex-col gap-4">
         <div>
-          <label className="auth-label text-honeycomb" htmlFor="emailOrUsername">
+          <label className="auth-label" htmlFor="emailOrUsername">
             Correo o usuario
           </label>
           <input
@@ -48,7 +49,7 @@ export const LoginForm = ({ onSwitchView }) => {
         </div>
 
         <div>
-          <label className="auth-label text-honeycomb" htmlFor="password">
+          <label className="auth-label" htmlFor="password">
             Contraseña
           </label>
           <div className="relative">
@@ -64,7 +65,7 @@ export const LoginForm = ({ onSwitchView }) => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wider text-pollen hover:text-honey-nectar"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wider text-cream-comb/80 transition hover:text-honey-nectar"
             >
               {showPassword ? "Ocultar" : "Mostrar"}
             </button>
@@ -84,9 +85,9 @@ export const LoginForm = ({ onSwitchView }) => {
           </button>
         </div>
 
-        <button type="submit" disabled={loading} className="auth-btn-primary">
-          {loading ? "Despegando..." : "Entrar a la colmena"}
-        </button>
+        <AuthSubmitButton loading={loading} loadingLabel="Despegando...">
+          Entrar a la colmena
+        </AuthSubmitButton>
       </form>
 
       <p className="mt-6 text-center text-sm text-honeycomb">

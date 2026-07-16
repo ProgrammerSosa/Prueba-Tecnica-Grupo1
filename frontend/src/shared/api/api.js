@@ -63,19 +63,6 @@ const attachAuthToken = (config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  // #region agent log
-  if ((config?.baseURL || "").includes("3008") || (config?.url || "").includes("/reports") || (config?.url || "").includes("/alerts")) {
-    let jwtClaims = null;
-    try {
-      const payload = JSON.parse(atob(String(token || "").split(".")[1] || ""));
-      jwtClaims = { iss: payload.iss, aud: payload.aud, exp: payload.exp, hasSub: Boolean(payload.sub) };
-    } catch {
-      jwtClaims = { parseError: true };
-    }
-    fetch('http://127.0.0.1:7579/ingest/fe688a18-e41e-438d-adc4-2b2c5e8f12dc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6d89a4'},body:JSON.stringify({sessionId:'6d89a4',runId:'pre-fix',hypothesisId:'A_B_C',location:'api.js:attachAuthToken',message:'reports request auth header',data:{hasToken:Boolean(token),tokenLen:token?String(token).length:0,hasAuthHeader:Boolean(config.headers?.Authorization),baseURL:config.baseURL||null,url:config.url||null,jwtClaims,reportsEnv:import.meta.env.VITE_REPORTS_URL||null},timestamp:Date.now()})}).catch(()=>{});
-  }
-  // #endregion
-
   return config;
 };
 
@@ -115,17 +102,6 @@ const shouldEndSessionOn401 = (error) => {
 };
 
 const handleUnauthorized = (error) => {
-  // #region agent log
-  const cfg = error.config || {};
-  const isReports =
-    (cfg.baseURL || "").includes("3008") ||
-    (cfg.url || "").includes("/reports") ||
-    (cfg.url || "").includes("/alerts");
-  if (isReports || error.response?.status === 401) {
-    fetch('http://127.0.0.1:7579/ingest/fe688a18-e41e-438d-adc4-2b2c5e8f12dc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6d89a4'},body:JSON.stringify({sessionId:'6d89a4',runId:'pre-fix',hypothesisId:'B_D_E',location:'api.js:handleUnauthorized',message:'401 or reports error response',data:{status:error.response?.status||null,errorCode:error.response?.data?.error||null,errorMessage:error.response?.data?.message||null,url:cfg.url||null,baseURL:cfg.baseURL||null,hadAuthHeader:Boolean(cfg.headers?.Authorization),willEndSession:shouldEndSessionOn401(error)},timestamp:Date.now()})}).catch(()=>{});
-  }
-  // #endregion
-
   if (shouldEndSessionOn401(error)) {
     useAuthStore.getState().logout();
     if (window.location.pathname !== "/") {
